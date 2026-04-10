@@ -1,0 +1,29 @@
+.calendarMobileContainer {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 25% 75%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.calendarImage {
+    width: 90%;
+    margin: auto;
+    object-fit: contain;
+}
+
+@media (max-width: 600px) {
+    .calendarMobileContainer {
+        grid-auto-flow: row;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0;
+    }
+
+    .calendarImage {
+        height: 120px;
+        margin-top: 1rem;
+    }
+}

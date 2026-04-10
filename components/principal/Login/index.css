@@ -1,0 +1,20 @@
+.colorCardLogin {
+    background-color: rgba(0, 0, 0, 0.488);
+    box-shadow: 0px 0px 50px rgba(76, 102, 199, 0.43);
+}
+
+.logoIncconection {
+    filter: drop-shadow(0px 0px 10px rgb(255, 255, 255));
+    width: 90%;
+}
+
+@keyframes fadeInSlide {
+    0% {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
