@@ -47,6 +47,9 @@ yarn-error.log*
 .vscode/
 .idea/
 
-
+# build
 deploy/
 node_modules/
+
+#supabase
+supabase/.temp/
