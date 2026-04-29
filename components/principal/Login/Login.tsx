@@ -489,7 +489,7 @@ export default function Login() {
                 href="/terminos-y-condiciones"
                 className="text-teal-600 hover:text-teal-700 font-medium transition-colors underline-offset-2 hover:underline text-center"
               >
-                Ver Términos y Condiciones
+                Ver Términos y Condiciones -2026-
               </Link>
             </div>
           </div>
