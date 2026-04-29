@@ -1,0 +1,38 @@
+# Dependencias
+node_modules
+npm-debug.log*
+
+# Build output
+.next
+out
+dist
+
+# Variables de entorno (NUNCA al contenedor)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose*.yml
+
+# CI/CD
+.github
+
+# Archivos de desarrollo
+*.md
+deploy
+deploy.tar.gz
+supabase
+
+# OS
+.DS_Store
+Thumbs.db
