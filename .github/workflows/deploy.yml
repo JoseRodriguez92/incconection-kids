@@ -71,7 +71,7 @@ jobs:
             cd /var/www/incconectionKids/jaimequijano
 
             # Iniciar sesión en el registro
-            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Bajar nueva imagen
             docker pull ghcr.io/${{ github.repository }}:latest
