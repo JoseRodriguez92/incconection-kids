@@ -74,7 +74,7 @@ jobs:
             echo "${{ secrets.GH_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Bajar nueva imagen
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/joserodriguez92/incconection-kids:latest
 
             # Reiniciar con la nueva imagen
             docker compose down
