@@ -136,14 +136,14 @@ export default function PadreFamilia() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 h-dvh">
         {/* Header */}
-        <header className="p-4 border-b border-border/40 bg-background/60 backdrop-blur-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
+        <header className="px-4 pt-3 pb-3 border-b border-border/40 bg-background/60 backdrop-blur-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+            <div className="flex items-center gap-3 min-w-0">
               {/* Botón hamburger solo en mobile */}
               <Button
                 variant="ghost"
                 size="sm"
-                className="lg:hidden"
+                className="lg:hidden shrink-0"
                 onClick={() => setIsMobileMenuOpen(true)}
               >
                 <Menu className="w-5 h-5" />
@@ -155,14 +155,16 @@ export default function PadreFamilia() {
 
             {/* Selector de estudiante */}
             {studentsLoading ? (
-              <Skeleton className="h-[50px] w-[280px] rounded-md" />
+              <Skeleton className="h-[50px] w-full sm:w-[280px] rounded-md shrink-0" />
             ) : students.length > 0 && activeStudent ? (
-              <StudentSelector
-                students={students}
-                activeStudent={activeStudent}
-                onStudentChange={setActiveStudent}
-                language="es"
-              />
+              <div className="w-full sm:w-auto shrink-0">
+                <StudentSelector
+                  students={students}
+                  activeStudent={activeStudent}
+                  onStudentChange={setActiveStudent}
+                  language="es"
+                />
+              </div>
             ) : (
               <span className="text-sm text-muted-foreground">
                 Sin estudiantes vinculados

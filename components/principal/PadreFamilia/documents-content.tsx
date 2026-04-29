@@ -28,6 +28,7 @@ import {
   CalendarDays,
   Users,
   HelpCircle,
+  ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import "driver.js/dist/driver.css";
@@ -94,6 +95,7 @@ export function DocumentsContent({ language: _language, activeStudent: _activeSt
   const [search, setSearch]         = useState("");
   const [selected, setSelected]     = useState<Circular | null>(null);
   const [previewAtt, setPreviewAtt] = useState<{ name: string; url: string } | null>(null);
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
 
   // Email del usuario autenticado
   useEffect(() => {
@@ -222,57 +224,47 @@ export function DocumentsContent({ language: _language, activeStudent: _activeSt
 
   return (
     <div className="flex flex-col gap-0 h-full">
-      {/* Header */}
-      <div id="tour-docs-header" className="px-6 pt-6 pb-4 border-b">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Newspaper className="w-6 h-6 text-primary shrink-0" />
-            <div>
-              <h1 className="text-xl font-bold">Circulares</h1>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Comunicados enviados por la institución
-              </p>
-              {activePeriodName && (
-                <span className="inline-flex items-center gap-1 text-xs text-primary mt-0.5">
-                  <CalendarDays className="w-3 h-3" />
-                  {activePeriodName}
-                </span>
-              )}
-            </div>
-          </div>
+      {/* Toolbar */}
+      <div id="tour-docs-header" className="px-4 py-2.5 border-b flex items-center gap-3 min-h-[48px]">
+        {/* Indicador de período activo */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Newspaper className="w-4 h-4 text-primary shrink-0" />
+          {activePeriodName ? (
+            <span className="text-xs font-medium truncate text-foreground">{activePeriodName}</span>
+          ) : (
+            <span className="text-xs text-muted-foreground truncate">Todos los períodos</span>
+          )}
+        </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            {/* Selector de período */}
-            {periods.length > 0 && (
-              <Select value={filterPeriod} onValueChange={setFilterPeriod}>
-                <SelectTrigger id="tour-docs-periodo" className="h-8 text-xs w-48">
-                  <CalendarDays className="w-3 h-3 mr-1 text-muted-foreground" />
-                  <SelectValue placeholder="Período" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos los períodos</SelectItem>
-                  {periods.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.name}
-                      {p.is_active && (
-                        <span className="ml-1.5 text-[10px] text-green-600 font-semibold">● activo</span>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
-            <Button
-              id="tour-docs-boton"
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={startTour}
-            >
-              <HelpCircle className="w-4 h-4" />
-              Tour
-            </Button>
-          </div>
+        <div className="ml-auto flex items-center gap-2 shrink-0">
+          {periods.length > 0 && (
+            <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+              <SelectTrigger id="tour-docs-periodo" className="h-8 text-xs w-36 sm:w-48">
+                <CalendarDays className="w-3 h-3 mr-1 text-muted-foreground shrink-0" />
+                <SelectValue placeholder="Período" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los períodos</SelectItem>
+                {periods.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                    {p.is_active && (
+                      <span className="ml-1.5 text-[10px] text-green-600 font-semibold">● activo</span>
+                    )}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <Button
+            id="tour-docs-boton"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            onClick={startTour}
+          >
+            <HelpCircle className="w-4 h-4" />
+          </Button>
         </div>
       </div>
 
@@ -298,8 +290,13 @@ export function DocumentsContent({ language: _language, activeStudent: _activeSt
       ) : (
         <div className="flex flex-1 min-h-0 overflow-hidden">
 
-          {/* ── Panel izquierdo — lista ── */}
-          <div id="tour-docs-lista" className="w-80 shrink-0 border-r flex flex-col">
+          {/* ── Lista — oculta en móvil cuando hay detalle abierto ── */}
+          <div
+            id="tour-docs-lista"
+            className={`flex flex-col border-r
+              ${mobileView === "detail" ? "hidden" : "flex"}
+              md:flex w-full md:w-80 md:shrink-0`}
+          >
             <div className="p-3 border-b">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
@@ -325,7 +322,7 @@ export function DocumentsContent({ language: _language, activeStudent: _activeSt
                 filtered.map((c) => (
                   <button
                     key={c.id}
-                    onClick={() => setSelected(c)}
+                    onClick={() => { setSelected(c); setMobileView("detail"); }}
                     className={`w-full text-left px-4 py-3 transition-colors hover:bg-muted/50 ${
                       selected?.id === c.id ? "bg-primary/5 border-l-2 border-l-primary" : ""
                     }`}
@@ -351,16 +348,30 @@ export function DocumentsContent({ language: _language, activeStudent: _activeSt
             </div>
           </div>
 
-          {/* ── Panel derecho — detalle ── */}
-          <div id="tour-docs-detalle" className="flex-1 overflow-y-auto">
+          {/* ── Detalle — oculto en móvil cuando estamos en lista ── */}
+          <div
+            id="tour-docs-detalle"
+            className={`flex-1 overflow-y-auto flex-col
+              ${mobileView === "list" ? "hidden" : "flex"}
+              md:flex`}
+          >
             {!selected ? (
-              <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+              <div className="hidden md:flex items-center justify-center h-full text-muted-foreground text-sm">
                 Selecciona una circular
               </div>
             ) : (
-              <div className="p-6 space-y-5">
+              <div className="p-4 md:p-6 space-y-5">
+                {/* Botón volver — solo móvil */}
+                <button
+                  onClick={() => setMobileView("list")}
+                  className="md:hidden flex items-center gap-2 text-sm text-primary font-medium"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Volver a circulares
+                </button>
+
                 <div className="space-y-2">
-                  <h2 className="text-lg font-bold leading-snug">{selected.subject}</h2>
+                  <h2 className="text-base md:text-lg font-bold leading-snug">{selected.subject}</h2>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     {selected.from_name && (
                       <span className="flex items-center gap-1 font-medium text-foreground">
@@ -384,7 +395,7 @@ export function DocumentsContent({ language: _language, activeStudent: _activeSt
                         className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
                       >
                         <Paperclip className="w-3 h-3 shrink-0" />
-                        <span className="max-w-[200px] truncate">{att.name}</span>
+                        <span className="max-w-[180px] truncate">{att.name}</span>
                         {att.size > 0 && (
                           <span className="text-muted-foreground ml-1">{formatBytes(att.size)}</span>
                         )}
@@ -394,7 +405,7 @@ export function DocumentsContent({ language: _language, activeStudent: _activeSt
                 )}
 
                 <Card>
-                  <CardContent className="p-6">
+                  <CardContent className="p-4 md:p-6">
                     <div
                       className="prose prose-sm max-w-none text-foreground"
                       dangerouslySetInnerHTML={{ __html: selected.html }}

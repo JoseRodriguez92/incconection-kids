@@ -1,24 +1,47 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+import { useState } from "react";
+import dynamic from "next/dynamic";
+
+const HeatMapZonas = dynamic(() => import("./HeatMapZonas"), { ssr: false });
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 // import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { Bus, Plus, Search, MapPin, Clock, Users, User, Settings } from "lucide-react"
-import { rutasList } from "./data"
+import {
+  Bus,
+  Plus,
+  Search,
+  MapPin,
+  Clock,
+  Users,
+  User,
+  Settings,
+} from "lucide-react";
+import { rutasList } from "./data";
 
 export default function RoutesManagement() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isCreateRouteOpen, setIsCreateRouteOpen] = useState(false)
-  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false)
-  const [selectedRoute, setSelectedRoute] = useState<any>(null)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isCreateRouteOpen, setIsCreateRouteOpen] = useState(false);
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [selectedRoute, setSelectedRoute] = useState<any>(null);
   const [routeForm, setRouteForm] = useState({
     nombre: "",
     conductor: { nombre: "", telefono: "", licencia: "" },
@@ -26,7 +49,7 @@ export default function RoutesManagement() {
     horarios: { salida: "", llegada: "", salidaTarde: "", llegadaTarde: "" },
     paradas: "",
     estado: "Activa",
-  })
+  });
 
   // Filtrar rutas por búsqueda
   const filteredRoutes = rutasList.filter(
@@ -34,30 +57,32 @@ export default function RoutesManagement() {
       ruta.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ruta.conductor.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ruta.vehiculo.placa.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+  );
 
   // Datos para gráfica de zonas más concurridas
   const zonasData = rutasList
     .reduce((acc: any[], ruta) => {
       ruta.paradas.forEach((parada) => {
         if (parada !== "Colegio") {
-          const estudiantesEnParada = ruta.estudiantes.filter((est) => est.parada === parada).length
-          const existingZona = acc.find((zona) => zona.name === parada)
+          const estudiantesEnParada = ruta.estudiantes.filter(
+            (est) => est.parada === parada,
+          ).length;
+          const existingZona = acc.find((zona) => zona.name === parada);
           if (existingZona) {
-            existingZona.estudiantes += estudiantesEnParada
+            existingZona.estudiantes += estudiantesEnParada;
           } else {
-            acc.push({ name: parada, estudiantes: estudiantesEnParada })
+            acc.push({ name: parada, estudiantes: estudiantesEnParada });
           }
         }
-      })
-      return acc
+      });
+      return acc;
     }, [])
     .sort((a, b) => b.estudiantes - a.estudiantes)
-    .slice(0, 8)
+    .slice(0, 8);
 
   const handleCreateRoute = () => {
-    console.log("Crear ruta:", routeForm)
-    setIsCreateRouteOpen(false)
+    console.log("Crear ruta:", routeForm);
+    setIsCreateRouteOpen(false);
     setRouteForm({
       nombre: "",
       conductor: { nombre: "", telefono: "", licencia: "" },
@@ -65,33 +90,36 @@ export default function RoutesManagement() {
       horarios: { salida: "", llegada: "", salidaTarde: "", llegadaTarde: "" },
       paradas: "",
       estado: "Activa",
-    })
-  }
+    });
+  };
 
   const handleAddStudent = () => {
-    console.log("Agregar estudiante a ruta:", selectedRoute?.id)
-    setIsAddStudentOpen(false)
-    setSelectedRoute(null)
-  }
+    console.log("Agregar estudiante a ruta:", selectedRoute?.id);
+    setIsAddStudentOpen(false);
+    setSelectedRoute(null);
+  };
 
   const getEstadoBadgeColor = (estado: string) => {
     switch (estado) {
       case "Activa":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "Inactiva":
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
       case "Mantenimiento":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">Gestión de Rutas</h2>
-        <Button onClick={() => setIsCreateRouteOpen(true)} className="flex items-center space-x-2">
+        <Button
+          onClick={() => setIsCreateRouteOpen(true)}
+          className="flex items-center space-x-2"
+        >
           <Plus className="w-4 h-4" />
           <span>Nueva Ruta</span>
         </Button>
@@ -106,26 +134,139 @@ export default function RoutesManagement() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="h-64">
-            {/* <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={zonasData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="estudiantes" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer> */}
-          </div>
-          <div className="mt-4 p-4 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground">
-              <strong>Zona principal:</strong> {zonasData[0]?.name} con {zonasData[0]?.estudiantes} estudiantes
-            </p>
-            <p className="text-sm text-muted-foreground">
-              <strong>Total de estudiantes transportados:</strong>{" "}
-              {rutasList.reduce((acc, ruta) => acc + ruta.estudiantes.length, 0)}
-            </p>
-          </div>
+          <HeatMapZonas
+            zonas={[
+              { address: "Usaquén", weight: 12, lat: 4.7021, lng: -74.0317 },
+              { address: "Chapinero", weight: 8, lat: 4.6454, lng: -74.0584 },
+              { address: "Fontibón", weight: 15, lat: 4.6729, lng: -74.1469 },
+              { address: "Engativá", weight: 10, lat: 4.7013, lng: -74.1132 },
+              { address: "Teusaquillo", weight: 6, lat: 4.6441, lng: -74.0869 },
+              { address: "Santa Fe", weight: 9, lat: 4.6097, lng: -74.0817 },
+              { address: "Suba Norte", weight: 18, lat: 4.7602, lng: -74.0875 },
+              {
+                address: "Barrios Unidos",
+                weight: 7,
+                lat: 4.668,
+                lng: -74.0821,
+              },
+              {
+                address: "Los Mártires",
+                weight: 5,
+                lat: 4.6108,
+                lng: -74.0951,
+              },
+              { address: "Kennedy", weight: 14, lat: 4.6276, lng: -74.1502 },
+              {
+                address: "Usaquén Norte",
+                weight: 11,
+                lat: 4.7312,
+                lng: -74.0298,
+              },
+              { address: "Bosa", weight: 16, lat: 4.5986, lng: -74.1944 },
+              {
+                address: "Chapinero Alto",
+                weight: 9,
+                lat: 4.6587,
+                lng: -74.0531,
+              },
+              { address: "Chicó", weight: 13, lat: 4.6812, lng: -74.0487 },
+              {
+                address: "Suba Centro",
+                weight: 17,
+                lat: 4.7418,
+                lng: -74.0941,
+              },
+              {
+                address: "Fontibón Centro",
+                weight: 8,
+                lat: 4.6614,
+                lng: -74.1398,
+              },
+              {
+                address: "Antonio Nariño",
+                weight: 6,
+                lat: 4.5931,
+                lng: -74.1013,
+              },
+              {
+                address: "Puente Aranda",
+                weight: 11,
+                lat: 4.6231,
+                lng: -74.1151,
+              },
+              {
+                address: "Engativá Centro",
+                weight: 14,
+                lat: 4.6891,
+                lng: -74.1231,
+              },
+              {
+                address: "Engativá Sur",
+                weight: 10,
+                lat: 4.6753,
+                lng: -74.1178,
+              },
+              {
+                address: "Usaquén Centro",
+                weight: 7,
+                lat: 4.7156,
+                lng: -74.0362,
+              },
+              {
+                address: "Teusaquillo Centro",
+                weight: 9,
+                lat: 4.6398,
+                lng: -74.0912,
+              },
+              {
+                address: "Barrios Unidos Norte",
+                weight: 12,
+                lat: 4.6742,
+                lng: -74.0798,
+              },
+              {
+                address: "Kennedy Centro",
+                weight: 19,
+                lat: 4.6189,
+                lng: -74.1623,
+              },
+              {
+                address: "Bosa Centro",
+                weight: 15,
+                lat: 4.5897,
+                lng: -74.1871,
+              },
+              {
+                address: "Suba Rincón",
+                weight: 20,
+                lat: 4.7534,
+                lng: -74.1021,
+              },
+              {
+                address: "Puente Aranda Centro",
+                weight: 8,
+                lat: 4.6287,
+                lng: -74.1098,
+              },
+              {
+                address: "Fontibón Norte",
+                weight: 13,
+                lat: 4.6812,
+                lng: -74.1512,
+              },
+              {
+                address: "La Candelaria",
+                weight: 5,
+                lat: 4.5981,
+                lng: -74.0762,
+              },
+              { address: "Suba Aloha", weight: 16, lat: 4.7689, lng: -74.0812 },
+            ]}
+            ciudad="Bogotá"
+            lat={4.711}
+            lng={-74.0721}
+            zoom={11}
+          />
         </CardContent>
       </Card>
 
@@ -150,7 +291,9 @@ export default function RoutesManagement() {
                   <Bus className="w-5 h-5" />
                   <span>{ruta.nombre}</span>
                 </CardTitle>
-                <Badge className={getEstadoBadgeColor(ruta.estado)}>{ruta.estado}</Badge>
+                <Badge className={getEstadoBadgeColor(ruta.estado)}>
+                  {ruta.estado}
+                </Badge>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -159,7 +302,9 @@ export default function RoutesManagement() {
                 <User className="w-4 h-4 text-blue-500" />
                 <div>
                   <p className="font-medium">{ruta.conductor.nombre}</p>
-                  <p className="text-sm text-muted-foreground">{ruta.conductor.telefono}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {ruta.conductor.telefono}
+                  </p>
                 </div>
               </div>
 
@@ -171,7 +316,8 @@ export default function RoutesManagement() {
                     {ruta.vehiculo.placa} - {ruta.vehiculo.modelo}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Capacidad: {ruta.vehiculo.capacidad} - Estado: {ruta.vehiculo.estado}
+                    Capacidad: {ruta.vehiculo.capacidad} - Estado:{" "}
+                    {ruta.vehiculo.estado}
                   </p>
                 </div>
               </div>
@@ -181,10 +327,12 @@ export default function RoutesManagement() {
                 <Clock className="w-4 h-4 text-orange-500" />
                 <div>
                   <p className="text-sm">
-                    <strong>Mañana:</strong> {ruta.horarios.salida} - {ruta.horarios.llegada}
+                    <strong>Mañana:</strong> {ruta.horarios.salida} -{" "}
+                    {ruta.horarios.llegada}
                   </p>
                   <p className="text-sm">
-                    <strong>Tarde:</strong> {ruta.horarios.salidaTarde} - {ruta.horarios.llegadaTarde}
+                    <strong>Tarde:</strong> {ruta.horarios.salidaTarde} -{" "}
+                    {ruta.horarios.llegadaTarde}
                   </p>
                 </div>
               </div>
@@ -193,14 +341,16 @@ export default function RoutesManagement() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Users className="w-4 h-4 text-purple-500" />
-                  <span className="font-medium">{ruta.estudiantes.length} estudiantes</span>
+                  <span className="font-medium">
+                    {ruta.estudiantes.length} estudiantes
+                  </span>
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setSelectedRoute(ruta)
-                    setIsAddStudentOpen(true)
+                    setSelectedRoute(ruta);
+                    setIsAddStudentOpen(true);
                   }}
                 >
                   Agregar Estudiante
@@ -210,11 +360,16 @@ export default function RoutesManagement() {
               {/* Lista de estudiantes */}
               <div className="max-h-32 overflow-y-auto space-y-1">
                 {ruta.estudiantes.map((estudiante) => (
-                  <div key={estudiante.id} className="flex justify-between items-center text-sm p-2 bg-muted rounded">
+                  <div
+                    key={estudiante.id}
+                    className="flex justify-between items-center text-sm p-2 bg-muted rounded"
+                  >
                     <span>
                       {estudiante.nombre} - {estudiante.grado}
                     </span>
-                    <span className="text-muted-foreground">{estudiante.parada}</span>
+                    <span className="text-muted-foreground">
+                      {estudiante.parada}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -247,7 +402,9 @@ export default function RoutesManagement() {
               <Input
                 id="nombre"
                 value={routeForm.nombre}
-                onChange={(e) => setRouteForm({ ...routeForm, nombre: e.target.value })}
+                onChange={(e) =>
+                  setRouteForm({ ...routeForm, nombre: e.target.value })
+                }
                 placeholder="Ej: Ruta Centro"
               />
             </div>
@@ -264,7 +421,10 @@ export default function RoutesManagement() {
                   onChange={(e) =>
                     setRouteForm({
                       ...routeForm,
-                      conductor: { ...routeForm.conductor, nombre: e.target.value },
+                      conductor: {
+                        ...routeForm.conductor,
+                        nombre: e.target.value,
+                      },
                     })
                   }
                 />
@@ -277,7 +437,10 @@ export default function RoutesManagement() {
                   onChange={(e) =>
                     setRouteForm({
                       ...routeForm,
-                      conductor: { ...routeForm.conductor, telefono: e.target.value },
+                      conductor: {
+                        ...routeForm.conductor,
+                        telefono: e.target.value,
+                      },
                     })
                   }
                 />
@@ -292,7 +455,10 @@ export default function RoutesManagement() {
                 onChange={(e) =>
                   setRouteForm({
                     ...routeForm,
-                    conductor: { ...routeForm.conductor, licencia: e.target.value },
+                    conductor: {
+                      ...routeForm.conductor,
+                      licencia: e.target.value,
+                    },
                   })
                 }
               />
@@ -310,7 +476,10 @@ export default function RoutesManagement() {
                   onChange={(e) =>
                     setRouteForm({
                       ...routeForm,
-                      vehiculo: { ...routeForm.vehiculo, placa: e.target.value },
+                      vehiculo: {
+                        ...routeForm.vehiculo,
+                        placa: e.target.value,
+                      },
                     })
                   }
                 />
@@ -324,7 +493,10 @@ export default function RoutesManagement() {
                   onChange={(e) =>
                     setRouteForm({
                       ...routeForm,
-                      vehiculo: { ...routeForm.vehiculo, capacidad: e.target.value },
+                      vehiculo: {
+                        ...routeForm.vehiculo,
+                        capacidad: e.target.value,
+                      },
                     })
                   }
                 />
@@ -358,7 +530,10 @@ export default function RoutesManagement() {
                   onChange={(e) =>
                     setRouteForm({
                       ...routeForm,
-                      horarios: { ...routeForm.horarios, salida: e.target.value },
+                      horarios: {
+                        ...routeForm.horarios,
+                        salida: e.target.value,
+                      },
                     })
                   }
                 />
@@ -372,7 +547,10 @@ export default function RoutesManagement() {
                   onChange={(e) =>
                     setRouteForm({
                       ...routeForm,
-                      horarios: { ...routeForm.horarios, llegada: e.target.value },
+                      horarios: {
+                        ...routeForm.horarios,
+                        llegada: e.target.value,
+                      },
                     })
                   }
                 />
@@ -386,7 +564,10 @@ export default function RoutesManagement() {
                   onChange={(e) =>
                     setRouteForm({
                       ...routeForm,
-                      horarios: { ...routeForm.horarios, salidaTarde: e.target.value },
+                      horarios: {
+                        ...routeForm.horarios,
+                        salidaTarde: e.target.value,
+                      },
                     })
                   }
                 />
@@ -400,7 +581,10 @@ export default function RoutesManagement() {
                   onChange={(e) =>
                     setRouteForm({
                       ...routeForm,
-                      horarios: { ...routeForm.horarios, llegadaTarde: e.target.value },
+                      horarios: {
+                        ...routeForm.horarios,
+                        llegadaTarde: e.target.value,
+                      },
                     })
                   }
                 />
@@ -412,14 +596,19 @@ export default function RoutesManagement() {
               <Textarea
                 id="paradas"
                 value={routeForm.paradas}
-                onChange={(e) => setRouteForm({ ...routeForm, paradas: e.target.value })}
+                onChange={(e) =>
+                  setRouteForm({ ...routeForm, paradas: e.target.value })
+                }
                 placeholder="Ej: Centro Comercial, Barrio Los Rosales, Parque Principal"
                 rows={3}
               />
             </div>
 
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsCreateRouteOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsCreateRouteOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button onClick={handleCreateRoute}>Crear Ruta</Button>
@@ -432,7 +621,9 @@ export default function RoutesManagement() {
       <Dialog open={isAddStudentOpen} onOpenChange={setIsAddStudentOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Agregar Estudiante a {selectedRoute?.nombre}</DialogTitle>
+            <DialogTitle>
+              Agregar Estudiante a {selectedRoute?.nombre}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div>
@@ -456,17 +647,22 @@ export default function RoutesManagement() {
                   <SelectValue placeholder="Seleccionar parada..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {selectedRoute?.paradas.map((parada: string, index: number) => (
-                    <SelectItem key={index} value={parada}>
-                      {parada}
-                    </SelectItem>
-                  ))}
+                  {selectedRoute?.paradas.map(
+                    (parada: string, index: number) => (
+                      <SelectItem key={index} value={parada}>
+                        {parada}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsAddStudentOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddStudentOpen(false)}
+              >
                 Cancelar
               </Button>
               <Button onClick={handleAddStudent}>Agregar Estudiante</Button>
@@ -475,5 +671,5 @@ export default function RoutesManagement() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

@@ -143,7 +143,8 @@ export function CalendarContent({ activeStudent }: CalendarContentProps) {
   });
 
   const days = getDaysInMonth(currentDate);
-  const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  const weekDays = ["D", "L", "M", "X", "J", "V", "S"];
+  const weekDaysFull = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
   const startTour = useCallback(async () => {
     const { driver } = await import("driver.js");
@@ -338,14 +339,15 @@ export function CalendarContent({ activeStudent }: CalendarContentProps) {
               </div>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-7 gap-2">
-              {weekDays.map((d) => (
+          <CardContent className="px-2 md:px-6">
+            <div className="grid grid-cols-7 gap-1 md:gap-2">
+              {weekDays.map((d, i) => (
                 <div
                   key={d}
-                  className="text-center font-semibold text-sm py-2 text-muted-foreground"
+                  className="text-center font-semibold text-xs md:text-sm py-2 text-muted-foreground"
                 >
-                  {d}
+                  <span className="md:hidden">{d}</span>
+                  <span className="hidden md:inline">{weekDaysFull[i]}</span>
                 </div>
               ))}
               {days.map((day, index) => {
@@ -355,30 +357,40 @@ export function CalendarContent({ activeStudent }: CalendarContentProps) {
                 return (
                   <div
                     key={index}
-                    className={`min-h-[100px] border rounded-lg p-2 ${
+                    className={`min-h-[52px] md:min-h-[100px] border rounded-lg p-1 md:p-2 ${
                       day ? "bg-card" : "bg-muted/30"
                     } ${isToday ? "ring-2 ring-primary" : ""}`}
                   >
                     {day && (
                       <>
                         <div
-                          className={`text-sm font-medium mb-1 ${
+                          className={`text-xs md:text-sm font-medium mb-1 ${
                             isToday ? "text-primary" : "text-foreground"
                           }`}
                         >
                           {day.getDate()}
                         </div>
-                        <div className="space-y-1">
+                        {/* Mobile: puntos de color */}
+                        <div className="flex flex-wrap gap-0.5 md:hidden">
+                          {dayEvents.slice(0, 3).map((event) => (
+                            <button
+                              key={event.id}
+                              onClick={() => { setSelectedEvent(event); setIsSheetOpen(true); }}
+                              className={`${getCategoryColor(event.category)} w-2 h-2 rounded-full`}
+                              title={event.title}
+                            />
+                          ))}
+                          {dayEvents.length > 3 && (
+                            <span className="text-[9px] text-muted-foreground leading-none">+{dayEvents.length - 3}</span>
+                          )}
+                        </div>
+                        {/* Desktop: pills con texto */}
+                        <div className="hidden md:block space-y-1">
                           {dayEvents.slice(0, 2).map((event) => (
                             <div
                               key={event.id}
-                              onClick={() => {
-                                setSelectedEvent(event);
-                                setIsSheetOpen(true);
-                              }}
-                              className={`${getCategoryColor(
-                                event.category,
-                              )} text-white text-xs p-1 rounded cursor-pointer hover:opacity-80 transition-opacity truncate`}
+                              onClick={() => { setSelectedEvent(event); setIsSheetOpen(true); }}
+                              className={`${getCategoryColor(event.category)} text-white text-xs p-1 rounded cursor-pointer hover:opacity-80 transition-opacity truncate`}
                               title={event.title}
                             >
                               {event.title}
@@ -402,102 +414,76 @@ export function CalendarContent({ activeStudent }: CalendarContentProps) {
 
       {/* Modal detalle evento */}
       <Dialog open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <DialogContent className="max-w-7xl h-[90dvh] overflow-hidden p-0 gap-0">
+        <DialogContent className="w-[calc(100%-1rem)] max-w-2xl max-h-[88dvh] overflow-hidden p-0 gap-0 rounded-xl">
           {selectedEvent && (
-            <div className="flex flex-col h-full">
-              <div className="relative h-[60vh] md:h-[75dvh] w-full bg-linear-to-br from-primary/30 via-primary/20 to-primary/10 overflow-hidden">
+            <div className="flex flex-col max-h-[88dvh]">
+              {/* Imagen / header */}
+              <div className="relative h-[30vh] md:h-[55dvh] w-full overflow-hidden shrink-0">
                 {selectedEvent.image_url ? (
                   <>
                     <img
                       src={selectedEvent.image_url}
                       alt={selectedEvent.title}
-                      className="w-auto h-full object-cover m-auto"
+                      className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/40 to-transparent" />
                   </>
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-linear-to-br from-primary/20 to-primary/5">
-                    <div className="rounded-full bg-white/10 p-8 backdrop-blur-sm">
-                      <BookOpen className="w-24 h-24 text-white/80" />
+                    <div className="rounded-full bg-white/10 p-6 md:p-8 backdrop-blur-sm">
+                      <BookOpen className="w-16 h-16 md:w-24 md:h-24 text-white/80" />
                     </div>
                   </div>
                 )}
-                <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10">
-                  <div className="space-y-3">
+                <div className="absolute bottom-0 left-0 right-0 p-4 md:p-8">
+                  <div className="space-y-2">
                     {selectedEvent.category && (
-                      <Badge
-                        className={`${getCategoryColor(selectedEvent.category)} text-white border-0 shadow-lg px-4 py-1.5 text-sm`}
-                      >
+                      <Badge className={`${getCategoryColor(selectedEvent.category)} text-white border-0 shadow-lg px-3 py-1 text-xs md:text-sm`}>
                         {selectedEvent.category}
                       </Badge>
                     )}
-                    <h2 className="text-3xl md:text-5xl font-bold text-white drop-shadow-2xl leading-tight">
+                    <h2 className="text-xl md:text-4xl font-bold text-white drop-shadow-2xl leading-tight">
                       {selectedEvent.title}
                     </h2>
                   </div>
                 </div>
               </div>
 
-              <div className="h-auto md:h-[25dvh] overflow-y-auto bg-background">
-                <div className="p-4 md:p-6">
-                  <div className="flex flex-wrap gap-3 md:gap-4">
-                    {selectedEvent.description && (
-                      <div className="flex-1 min-w-[200px]">
-                        <p className="text-xs text-muted-foreground mb-1">
-                          Descripción
-                        </p>
-                        <p className="text-sm font-medium text-foreground line-clamp-2">
-                          {selectedEvent.description}
-                        </p>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900">
+              {/* Info */}
+              <div className="flex-1 overflow-y-auto bg-background">
+                <div className="p-4 md:p-6 space-y-3">
+                  {selectedEvent.description && (
+                    <p className="text-sm text-muted-foreground">{selectedEvent.description}</p>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900">
                       <CalendarIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
-                      <div>
-                        <p className="text-xs text-blue-600 dark:text-blue-400">
-                          Fecha
-                        </p>
-                        <p className="text-sm font-semibold text-foreground whitespace-nowrap">
+                      <div className="min-w-0">
+                        <p className="text-xs text-blue-600 dark:text-blue-400">Fecha</p>
+                        <p className="text-sm font-semibold text-foreground truncate">
                           {formatDate(selectedEvent.start_at)}
-                          {formatDate(selectedEvent.start_at) !==
-                            formatDate(selectedEvent.end_at) && (
-                            <span className="text-xs text-muted-foreground">
-                              {" "}
-                              - {formatDate(selectedEvent.end_at)}
-                            </span>
+                          {formatDate(selectedEvent.start_at) !== formatDate(selectedEvent.end_at) && (
+                            <span className="text-xs text-muted-foreground"> — {formatDate(selectedEvent.end_at)}</span>
                           )}
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900">
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900">
                       <Clock className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
                       <div>
-                        <p className="text-xs text-green-600 dark:text-green-400">
-                          Horario
-                        </p>
-                        <p className="text-sm font-semibold text-foreground whitespace-nowrap">
-                          {selectedEvent.is_all_day ? (
-                            "Todo el día"
-                          ) : (
-                            <>
-                              {formatTime(selectedEvent.start_at)} –{" "}
-                              {formatTime(selectedEvent.end_at)}
-                            </>
-                          )}
+                        <p className="text-xs text-green-600 dark:text-green-400">Horario</p>
+                        <p className="text-sm font-semibold text-foreground">
+                          {selectedEvent.is_all_day ? "Todo el día" : <>{formatTime(selectedEvent.start_at)} – {formatTime(selectedEvent.end_at)}</>}
                         </p>
                       </div>
                     </div>
                     {selectedEvent.classroom_id && (
-                      <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900">
+                      <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-purple-50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-900">
                         <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0" />
                         <div>
-                          <p className="text-xs text-purple-600 dark:text-purple-400">
-                            Ubicación
-                          </p>
+                          <p className="text-xs text-purple-600 dark:text-purple-400">Ubicación</p>
                           <p className="text-sm font-semibold text-foreground">
-                            {classrooms.find(
-                              (c) => c.id === selectedEvent.classroom_id,
-                            )?.name || "Aula no encontrada"}
+                            {classrooms.find((c) => c.id === selectedEvent.classroom_id)?.name || "Aula no encontrada"}
                           </p>
                         </div>
                       </div>

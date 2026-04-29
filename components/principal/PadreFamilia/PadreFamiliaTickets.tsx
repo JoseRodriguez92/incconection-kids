@@ -34,6 +34,7 @@ import {
   Info,
   CalendarDays,
   HelpCircle,
+  ArrowLeft,
 } from "lucide-react";
 import "driver.js/dist/driver.css";
 import { InstituteStore } from "@/Stores/InstituteStore";
@@ -104,6 +105,7 @@ export function PadreFamiliaTickets() {
     category_id: "",
     priority_id: "",
   });
+  const [mobileView, setMobileView] = useState<"list" | "detail">("list");
 
   useEffect(() => {
     supabase.auth
@@ -369,40 +371,34 @@ export function PadreFamiliaTickets() {
   });
 
   return (
-    <div className="p-6 space-y-6 mx-auto w-full">
-      {/* Header */}
-      <div id="tour-pf-tickets-header" className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <TicketCheck className="w-6 h-6 text-primary" />
-            Mis Tickets de Soporte
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Consulta y seguimiento de tus solicitudes
-          </p>
-          {filterPeriod !== "todos" && periods.length > 0 && (
-            <span className="inline-flex items-center gap-1 text-xs text-primary mt-1">
-              <CalendarDays className="w-3.5 h-3.5" />
+    <div className="flex flex-col h-full">
+      {/* Toolbar */}
+      <div id="tour-pf-tickets-header" className="px-4 py-2.5 border-b flex items-center gap-3 min-h-[48px] shrink-0">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <TicketCheck className="w-4 h-4 text-primary shrink-0" />
+          {filterPeriod !== "todos" && periods.length > 0 ? (
+            <span className="text-xs font-medium truncate">
               {periods.find((p) => p.id === filterPeriod)?.name}
             </span>
+          ) : (
+            <span className="text-xs text-muted-foreground truncate">Todos los períodos</span>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2 shrink-0">
           <Button
             id="tour-pf-tickets-boton"
-            variant="outline"
-            size="sm"
-            className="gap-2"
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground"
             onClick={startTour}
           >
             <HelpCircle className="w-4 h-4" />
-            Tour de la sección
           </Button>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button id="tour-pf-tickets-nuevo" size="sm" className="gap-2">
+              <Button id="tour-pf-tickets-nuevo" size="sm" className="gap-1.5 h-8">
                 <Plus className="w-4 h-4" />
-                Nuevo Ticket
+                <span className="hidden sm:inline">Nuevo ticket</span>
               </Button>
             </DialogTrigger>
           <DialogContent className="sm:max-w-md">
@@ -499,312 +495,320 @@ export function PadreFamiliaTickets() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* ── Lista ── */}
-        <div id="tour-pf-tickets-lista" className="lg:col-span-1">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
-                <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                Mis solicitudes
-                <span className="ml-auto text-xs font-normal bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
-                  {filtered.length}
-                </span>
-              </CardTitle>
-              <div id="tour-pf-tickets-filtros" className="space-y-2">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" />
-                  <Input
-                    placeholder="Buscar..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 h-8 text-sm"
-                  />
-                </div>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="h-8 text-xs">
-                    <SelectValue placeholder="Estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos los estados</SelectItem>
-                    {statuses.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {periods.length > 0 && (
-                  <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+      {/* Content */}
+      <div className="flex-1 overflow-auto p-3 sm:p-5">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-4">
+
+          {/* ── Lista ── */}
+          <div
+            id="tour-pf-tickets-lista"
+            className={`${mobileView === "detail" ? "hidden" : "flex"} lg:flex flex-col lg:col-span-1`}
+          >
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                  <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                  Mis solicitudes
+                  <span className="ml-auto text-xs font-normal bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
+                    {filtered.length}
+                  </span>
+                </CardTitle>
+                <div id="tour-pf-tickets-filtros" className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-3.5 h-3.5" />
+                    <Input
+                      placeholder="Buscar..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-9 h-8 text-sm"
+                    />
+                  </div>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
                     <SelectTrigger className="h-8 text-xs">
-                      <CalendarDays className="w-3 h-3 mr-1 text-muted-foreground" />
-                      <SelectValue placeholder="Período" />
+                      <SelectValue placeholder="Estado" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="todos">Todos los períodos</SelectItem>
-                      {periods.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name}
-                          {p.is_active && (
-                            <span className="ml-1.5 text-[10px] text-green-600 font-semibold">
-                              ● activo
-                            </span>
-                          )}
+                      <SelectItem value="todos">Todos los estados</SelectItem>
+                      {statuses.map((s) => (
+                        <SelectItem key={s.id} value={s.id}>
+                          {s.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
-              {loading ? (
-                <div className="flex justify-center py-10">
-                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-                </div>
-              ) : filtered.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
-                  <Inbox className="w-8 h-8 opacity-40" />
-                  <p className="text-xs">Sin tickets aún</p>
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-[520px] overflow-y-auto pr-0.5">
-                  {filtered.map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      onClick={() => setSelected(ticket)}
-                      className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                        selected?.id === ticket.id
-                          ? "bg-primary/5 border-primary/30 shadow-sm"
-                          : "hover:bg-muted/50"
-                      }`}
-                    >
-                      {ticket.priority?.color && (
-                        <div
-                          className="h-0.5 w-full rounded-full mb-2"
-                          style={{ backgroundColor: ticket.priority.color }}
-                        />
-                      )}
-                      <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <p className="font-medium text-sm line-clamp-1 flex-1">
-                          {ticket.title}
-                        </p>
-                        {ticket.priority && (
-                          <span
-                            className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0"
-                            style={{
-                              backgroundColor: ticket.priority.color
-                                ? `${ticket.priority.color}20`
-                                : undefined,
-                              color: ticket.priority.color ?? undefined,
-                            }}
-                          >
-                            {ticket.priority.name}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between gap-2">
-                        {ticket.category && (
-                          <Badge
-                            variant="outline"
-                            className="text-[10px] h-4 px-1.5"
-                          >
-                            {ticket.category.name}
-                          </Badge>
-                        )}
-                        {ticket.status && (
-                          <span
-                            className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-auto"
-                            style={{
-                              backgroundColor: ticket.status.color
-                                ? `${ticket.status.color}20`
-                                : undefined,
-                              color: ticket.status.color ?? undefined,
-                            }}
-                          >
-                            {ticket.status.name}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center justify-between mt-1.5 text-[10px] text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
-                          {formatDate(ticket.created_at)}
-                        </span>
-                        <span className="font-mono">{ticket.code}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* ── Detalle ── */}
-        <div id="tour-pf-tickets-detalle" className="lg:col-span-2">
-          {!selected ? (
-            <Card className="flex items-center justify-center h-64 text-muted-foreground">
-              <div className="text-center space-y-2">
-                <TicketCheck className="w-10 h-10 mx-auto opacity-30" />
-                <p className="text-sm">
-                  Selecciona un ticket para ver el detalle
-                </p>
-              </div>
-            </Card>
-          ) : (
-            <Card className="flex flex-col">
-              <CardHeader className="pb-3 border-b">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-mono text-xs text-muted-foreground">
-                    {selected.code}
-                  </span>
-                  {selected.category && (
-                    <Badge variant="outline" className="text-[10px] h-5">
-                      {selected.category.name}
-                    </Badge>
-                  )}
-                  {selected.status && (
-                    <span
-                      className="text-xs font-semibold px-2.5 py-0.5 rounded-full ml-auto"
-                      style={{
-                        backgroundColor: selected.status.color
-                          ? `${selected.status.color}20`
-                          : undefined,
-                        color: selected.status.color ?? undefined,
-                      }}
-                    >
-                      {selected.status.name}
-                    </span>
-                  )}
-                </div>
-                <h3 className="font-semibold text-base leading-tight">
-                  {selected.title}
-                </h3>
-                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatDate(selected.created_at)}
-                  </span>
-                  {selected.priority && (
-                    <span
-                      className="px-2 py-0.5 rounded-full font-semibold"
-                      style={{
-                        backgroundColor: selected.priority.color
-                          ? `${selected.priority.color}20`
-                          : undefined,
-                        color: selected.priority.color ?? undefined,
-                      }}
-                    >
-                      {selected.priority.name}
-                    </span>
-                  )}
-                  {selected.status?.is_closed && (
-                    <span className="text-muted-foreground italic">
-                      · Cerrado
-                    </span>
+                  {periods.length > 0 && (
+                    <Select value={filterPeriod} onValueChange={setFilterPeriod}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <CalendarDays className="w-3 h-3 mr-1 text-muted-foreground" />
+                        <SelectValue placeholder="Período" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="todos">Todos los períodos</SelectItem>
+                        {periods.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                            {p.is_active && (
+                              <span className="ml-1.5 text-[10px] text-green-600 font-semibold">
+                                ● activo
+                              </span>
+                            )}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </div>
               </CardHeader>
-
-              <CardContent className="space-y-4 pt-4">
-                <div className="p-4 bg-muted/40 rounded-xl border text-sm leading-relaxed whitespace-pre-wrap">
-                  {selected.description ?? "Sin descripción"}
-                </div>
-
-                {selected.status?.is_closed && (
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/60 border text-xs text-muted-foreground">
-                    <Info className="w-4 h-4 shrink-0" />
-                    Este ticket está cerrado. Crea uno nuevo si el problema
-                    persiste.
+              <CardContent className="p-3 pt-0">
+                {loading ? (
+                  <div className="flex justify-center py-10">
+                    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                   </div>
-                )}
-
-                <div className="space-y-3">
-                  <h4 className="font-medium text-sm flex items-center gap-2">
-                    Conversación
-                    {comments.length > 0 && (
-                      <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
-                        {comments.length}
-                      </span>
-                    )}
-                  </h4>
-
-                  {loadingComments ? (
-                    <div className="flex justify-center py-6">
-                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : comments.length === 0 ? (
-                    <p className="text-xs text-muted-foreground text-center py-6 bg-muted/30 rounded-lg">
-                      Sin respuestas aún — el equipo de soporte responderá
-                      pronto
-                    </p>
-                  ) : (
-                    <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
-                      {comments.map((c) => (
-                        <div key={c.id} className="flex gap-3">
-                          <Avatar className="w-7 h-7 shrink-0">
-                            <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
-                              {initials(c.author?.full_name)}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <div className="bg-background border rounded-xl px-3 py-2.5">
-                              <div className="flex items-center justify-between gap-2 mb-1">
-                                <span className="font-medium text-xs">
-                                  {c.author?.full_name ?? "Soporte"}
-                                </span>
-                                <span className="text-[10px] text-muted-foreground shrink-0">
-                                  {formatDate(c.created_at)}
-                                </span>
-                              </div>
-                              <p className="text-sm leading-relaxed">
-                                {c.comment}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {!selected.status?.is_closed && (
-                  <div className="space-y-2 pt-1">
-                    <Textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Escribe un comentario o agrega más información..."
-                      rows={3}
-                      className="resize-none text-sm"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && (e.ctrlKey || e.metaKey))
-                          handleSendComment();
-                      }}
-                    />
-                    <div className="flex items-center justify-between">
-                      <p className="text-[10px] text-muted-foreground">
-                        Ctrl + Enter para enviar
-                      </p>
-                      <Button
-                        onClick={handleSendComment}
-                        disabled={sendingComment || !newComment.trim()}
-                        size="sm"
-                        className="gap-2"
+                ) : filtered.length === 0 ? (
+                  <div className="flex flex-col items-center gap-2 py-10 text-muted-foreground">
+                    <Inbox className="w-8 h-8 opacity-40" />
+                    <p className="text-xs">Sin tickets aún</p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-[55vh] overflow-y-auto pr-0.5">
+                    {filtered.map((ticket) => (
+                      <div
+                        key={ticket.id}
+                        onClick={() => { setSelected(ticket); setMobileView("detail"); }}
+                        className={`p-3 rounded-xl border cursor-pointer transition-all ${
+                          selected?.id === ticket.id
+                            ? "bg-primary/5 border-primary/30 shadow-sm"
+                            : "hover:bg-muted/50"
+                        }`}
                       >
-                        {sendingComment ? (
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        ) : (
-                          <Send className="w-3.5 h-3.5" />
+                        {ticket.priority?.color && (
+                          <div
+                            className="h-0.5 w-full rounded-full mb-2"
+                            style={{ backgroundColor: ticket.priority.color }}
+                          />
                         )}
-                        Enviar
-                      </Button>
-                    </div>
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          <p className="font-medium text-sm line-clamp-1 flex-1">
+                            {ticket.title}
+                          </p>
+                          {ticket.priority && (
+                            <span
+                              className="text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0"
+                              style={{
+                                backgroundColor: ticket.priority.color
+                                  ? `${ticket.priority.color}20`
+                                  : undefined,
+                                color: ticket.priority.color ?? undefined,
+                              }}
+                            >
+                              {ticket.priority.name}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          {ticket.category && (
+                            <Badge variant="outline" className="text-[10px] h-4 px-1.5">
+                              {ticket.category.name}
+                            </Badge>
+                          )}
+                          {ticket.status && (
+                            <span
+                              className="text-[10px] font-medium px-1.5 py-0.5 rounded-full shrink-0 ml-auto"
+                              style={{
+                                backgroundColor: ticket.status.color
+                                  ? `${ticket.status.color}20`
+                                  : undefined,
+                                color: ticket.status.color ?? undefined,
+                              }}
+                            >
+                              {ticket.status.name}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-between mt-1.5 text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {formatDate(ticket.created_at)}
+                          </span>
+                          <span className="font-mono">{ticket.code}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 )}
               </CardContent>
             </Card>
-          )}
+          </div>
+
+          {/* ── Detalle ── */}
+          <div
+            id="tour-pf-tickets-detalle"
+            className={`${mobileView === "list" ? "hidden" : "flex"} lg:flex flex-col lg:col-span-2`}
+          >
+            {!selected ? (
+              <Card className="flex items-center justify-center h-64 text-muted-foreground">
+                <div className="text-center space-y-2">
+                  <TicketCheck className="w-10 h-10 mx-auto opacity-30" />
+                  <p className="text-sm">Selecciona un ticket para ver el detalle</p>
+                </div>
+              </Card>
+            ) : (
+              <Card className="flex flex-col">
+                <CardHeader className="pb-3 border-b">
+                  {/* Botón volver — solo móvil */}
+                  <button
+                    onClick={() => setMobileView("list")}
+                    className="lg:hidden flex items-center gap-2 text-sm text-primary font-medium mb-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    Volver a tickets
+                  </button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {selected.code}
+                    </span>
+                    {selected.category && (
+                      <Badge variant="outline" className="text-[10px] h-5">
+                        {selected.category.name}
+                      </Badge>
+                    )}
+                    {selected.status && (
+                      <span
+                        className="text-xs font-semibold px-2.5 py-0.5 rounded-full ml-auto"
+                        style={{
+                          backgroundColor: selected.status.color
+                            ? `${selected.status.color}20`
+                            : undefined,
+                          color: selected.status.color ?? undefined,
+                        }}
+                      >
+                        {selected.status.name}
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-semibold text-base leading-tight">
+                    {selected.title}
+                  </h3>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      {formatDate(selected.created_at)}
+                    </span>
+                    {selected.priority && (
+                      <span
+                        className="px-2 py-0.5 rounded-full font-semibold"
+                        style={{
+                          backgroundColor: selected.priority.color
+                            ? `${selected.priority.color}20`
+                            : undefined,
+                          color: selected.priority.color ?? undefined,
+                        }}
+                      >
+                        {selected.priority.name}
+                      </span>
+                    )}
+                    {selected.status?.is_closed && (
+                      <span className="text-muted-foreground italic">· Cerrado</span>
+                    )}
+                  </div>
+                </CardHeader>
+
+                <CardContent className="space-y-4 pt-4">
+                  <div className="p-4 bg-muted/40 rounded-xl border text-sm leading-relaxed whitespace-pre-wrap">
+                    {selected.description ?? "Sin descripción"}
+                  </div>
+
+                  {selected.status?.is_closed && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/60 border text-xs text-muted-foreground">
+                      <Info className="w-4 h-4 shrink-0" />
+                      Este ticket está cerrado. Crea uno nuevo si el problema persiste.
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-sm flex items-center gap-2">
+                      Conversación
+                      {comments.length > 0 && (
+                        <span className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
+                          {comments.length}
+                        </span>
+                      )}
+                    </h4>
+
+                    {loadingComments ? (
+                      <div className="flex justify-center py-6">
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                      </div>
+                    ) : comments.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center py-6 bg-muted/30 rounded-lg">
+                        Sin respuestas aún — el equipo de soporte responderá pronto
+                      </p>
+                    ) : (
+                      <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                        {comments.map((c) => (
+                          <div key={c.id} className="flex gap-3">
+                            <Avatar className="w-7 h-7 shrink-0">
+                              <AvatarFallback className="text-[10px] font-bold bg-primary/10 text-primary">
+                                {initials(c.author?.full_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="bg-background border rounded-xl px-3 py-2.5">
+                                <div className="flex items-center justify-between gap-2 mb-1">
+                                  <span className="font-medium text-xs">
+                                    {c.author?.full_name ?? "Soporte"}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground shrink-0">
+                                    {formatDate(c.created_at)}
+                                  </span>
+                                </div>
+                                <p className="text-sm leading-relaxed">{c.comment}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {!selected.status?.is_closed && (
+                    <div className="space-y-2 pt-1">
+                      <Textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Escribe un comentario o agrega más información..."
+                        rows={3}
+                        className="resize-none text-sm"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && (e.ctrlKey || e.metaKey))
+                            handleSendComment();
+                        }}
+                      />
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] text-muted-foreground">
+                          Ctrl + Enter para enviar
+                        </p>
+                        <Button
+                          onClick={handleSendComment}
+                          disabled={sendingComment || !newComment.trim()}
+                          size="sm"
+                          className="gap-2"
+                        >
+                          {sendingComment ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Send className="w-3.5 h-3.5" />
+                          )}
+                          Enviar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
         </div>
       </div>
     </div>

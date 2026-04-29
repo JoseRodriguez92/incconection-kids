@@ -117,7 +117,12 @@ const defaultMenuCategories: MenuCategory[] = [
       { icon: BookCheck, label: "Materias", href: "/materias", id: "materias" },
       { icon: Book, label: "Cursos y grupos", href: "/cursos", id: "cursos" },
       { icon: Clock, label: "Horarios", href: "/horarios", id: "horarios" },
-      { icon: BarChart2, label: "Resultados", href: "/resultados", id: "resultados" },
+      {
+        icon: BarChart2,
+        label: "Resultados",
+        href: "/resultados",
+        id: "resultados",
+      },
     ],
   },
   {
@@ -171,13 +176,13 @@ const defaultMenuCategories: MenuCategory[] = [
         href: "/psicologia",
         id: "psicologia",
       },
-      { icon: ShoppingCart, label: "Tienda", href: "/tienda", id: "tienda" },
-      {
-        icon: CreditCard,
-        label: "Carnetización",
-        href: "/carnetizacion",
-        id: "carnetizacion",
-      },
+      // { icon: ShoppingCart, label: "Tienda", href: "/tienda", id: "tienda" },
+      // {
+      //   icon: CreditCard,
+      //   label: "Carnetización",
+      //   href: "/carnetizacion",
+      //   id: "carnetizacion",
+      // },
       {
         icon: Cross,
         label: "Enfermería",
@@ -263,7 +268,7 @@ export function Sidebar({
     items: cat.items?.filter(
       (item) =>
         !item.allowedRoles ||
-        (currentRole && item.allowedRoles.includes(currentRole as any))
+        (currentRole && item.allowedRoles.includes(currentRole as any)),
     ),
   }));
 
@@ -803,13 +808,14 @@ export function Sidebar({
       >
         {/* Header del sidebar móvil */}
         <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <School className="w-5 h-5 text-primary-foreground" />
+          <div className="flex items-center space-x-3 w-full h-13">
+            <div className="w-full rounded-lg h-full flex items-center justify-center">
+              <img
+                src="/logos/jqc_logo.png"
+                alt="Logo"
+                className="w-auto h-full bg-transparent"
+              />
             </div>
-            <span className="font-semibold text-sidebar-foreground">
-              Colegio Admin
-            </span>
           </div>
           <Button
             variant="ghost"

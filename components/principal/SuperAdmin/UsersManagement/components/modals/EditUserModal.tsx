@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,6 +23,11 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Camera, Edit, Loader2 } from "lucide-react";
+
+const LocationPicker = dynamic(
+  () => import("../LocationPicker").then((m) => ({ default: m.LocationPicker })),
+  { ssr: false }
+);
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { RolesField } from "../fields/RolesField";
@@ -59,6 +66,11 @@ export function EditUserModal({
   const [showAvatarUrlInput, setShowAvatarUrlInput] = useState(false);
   const [avatarUrlInput, setAvatarUrlInput] = useState("");
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
+  const [locationData, setLocationData] = useState<{
+    address: string;
+    latitude: number | null;
+    longitude: number | null;
+  }>({ address: "", latitude: null, longitude: null });
 
   useEffect(() => {
     if (!user) return;
@@ -78,6 +90,11 @@ export function EditUserModal({
       .filter(Boolean);
     setConditions(existingConditions);
     setLocalAvatarUrl(user.avatar_url || null);
+    setLocationData({
+      address: user.address || "",
+      latitude: user.latitude ?? null,
+      longitude: user.longitude ?? null,
+    });
   }, [user]);
 
   const resetAndClose = () => {
@@ -90,6 +107,7 @@ export function EditUserModal({
     setShowAvatarUrlInput(false);
     setAvatarUrlInput("");
     setLocalAvatarUrl(null);
+    setLocationData({ address: "", latitude: null, longitude: null });
     onClose();
   };
 
@@ -207,6 +225,9 @@ export function EditUserModal({
       if (formData.phone) profileData.phone = formData.phone;
       if (formData.document_type) profileData.document_type = formData.document_type;
       if (formData.document_number) profileData.document_number = formData.document_number;
+      if (locationData.address) profileData.address = locationData.address;
+      if (locationData.latitude != null) profileData.latitude = locationData.latitude;
+      if (locationData.longitude != null) profileData.longitude = locationData.longitude;
 
       const { error: profileError } = await supabase
         .from("profiles")
@@ -268,7 +289,14 @@ export function EditUserModal({
           <DialogDescription>Modifica la información del usuario</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <Tabs defaultValue="info">
+            <TabsList className="w-full">
+              <TabsTrigger value="info" className="flex-1">Información</TabsTrigger>
+              <TabsTrigger value="location" className="flex-1">Dirección / Ruta</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="info" className="space-y-6 pt-4">
           {/* Foto de perfil */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Foto de perfil</h3>
@@ -455,10 +483,27 @@ export function EditUserModal({
               disabled={isSubmitting}
             />
           </div>
+            </TabsContent>
+
+            <TabsContent value="location" className="space-y-4 pt-4">
+              <p className="text-sm text-muted-foreground">
+                Haz clic en el mapa o arrastra el pin para marcar la dirección del usuario.
+              </p>
+              <LocationPicker
+                initialLat={locationData.latitude}
+                initialLng={locationData.longitude}
+                initialAddress={locationData.address}
+                onLocationChange={(lat, lng, address) =>
+                  setLocationData({ latitude: lat, longitude: lng, address })
+                }
+                disabled={isSubmitting}
+              />
+            </TabsContent>
+          </Tabs>
 
           <Separator />
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end space-x-2 pt-2">
             <Button type="button" variant="outline" onClick={resetAndClose} disabled={isSubmitting}>
               Cancelar
             </Button>

@@ -7,7 +7,7 @@ export default function BackgroundSuperAdmin() {
       {/* <UnicornScene projectId="x7AfXFUohPvkHfWymJKl" /> */}
       <video
         src="../backgroundVideos/background.mp4"
-        style={{ width: "100%" }}
+        style={{ height: "100dvh", width: "auto", maxWidth: "fit-content" }}
         autoPlay
         muted
         loop

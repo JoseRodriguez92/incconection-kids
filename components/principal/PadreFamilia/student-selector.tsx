@@ -56,7 +56,7 @@ export function StudentSelector({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[280px] justify-between bg-transparent h-[50px]"
+          className="w-full sm:w-[280px] justify-between bg-transparent h-[50px]"
         >
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
@@ -87,7 +87,7 @@ export function StudentSelector({
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[280px] p-0">
+      <PopoverContent className="w-(--radix-popover-trigger-width) p-0">
         <Command>
           <CommandInput
             placeholder={
