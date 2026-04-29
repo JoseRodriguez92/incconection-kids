@@ -294,7 +294,7 @@ export default function Login() {
           </div>
           <div className="text-center space-y-2">
             <CardTitle className="text-2xl sm:text-3xl font-bold tracking-tight text-teal-700">
-              {"Accede a tu cuenta"}
+              {"Accede a tu cuenta"} :=
             </CardTitle>
             <CardDescription className="text-sm sm:text-base text-teal-600 font-medium">
               {"Bienvenido a tu plataforma educativa"}
