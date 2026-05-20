@@ -7,6 +7,11 @@ export interface UserFormData {
   phone: string;
   document_type: string;
   document_number: string;
+  birth_date: string;
+  city: string;
+  gender: string;
+  nationality: string;
+  signature_url: string;
 }
 
 export interface RoleItem {
@@ -29,6 +34,11 @@ export const EMPTY_FORM: UserFormData = {
   phone: "",
   document_type: "",
   document_number: "",
+  birth_date: "",
+  city: "",
+  gender: "",
+  nationality: "",
+  signature_url: "",
 };
 
 export const getRoleBadgeColor = (roleName: string): string => {

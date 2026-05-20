@@ -1156,6 +1156,50 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_details: {
+        Row: {
+          created_at: string | null
+          education_level: string | null
+          employer: string | null
+          id: string
+          occupation: string | null
+          profile_id: string
+          relationship_to_student: string | null
+          updated_at: string | null
+          work_phone: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          education_level?: string | null
+          employer?: string | null
+          id?: string
+          occupation?: string | null
+          profile_id: string
+          relationship_to_student?: string | null
+          updated_at?: string | null
+          work_phone?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          education_level?: string | null
+          employer?: string | null
+          id?: string
+          occupation?: string | null
+          profile_id?: string
+          relationship_to_student?: string | null
+          updated_at?: string | null
+          work_phone?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_details_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_has_student: {
         Row: {
           id: string
@@ -1244,48 +1288,60 @@ export type Database = {
         Row: {
           address: string | null
           avatar_url: string | null
+          birth_date: string | null
+          city: string | null
           created_at: string | null
           document_number: string | null
           document_type: string | null
           email: string
           first_name: string | null
           full_name: string
+          gender: string | null
           id: string
           last_name: string | null
           latitude: number | null
           longitude: number | null
+          nationality: string | null
           phone: string | null
           updated_at: string | null
         }
         Insert: {
           address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          city?: string | null
           created_at?: string | null
           document_number?: string | null
           document_type?: string | null
           email?: string
           first_name?: string | null
           full_name?: string
+          gender?: string | null
           id: string
           last_name?: string | null
           latitude?: number | null
           longitude?: number | null
+          nationality?: string | null
           phone?: string | null
           updated_at?: string | null
         }
         Update: {
           address?: string | null
           avatar_url?: string | null
+          birth_date?: string | null
+          city?: string | null
           created_at?: string | null
           document_number?: string | null
           document_type?: string | null
           email?: string
           first_name?: string | null
           full_name?: string
+          gender?: string | null
           id?: string
           last_name?: string | null
           latitude?: number | null
           longitude?: number | null
+          nationality?: string | null
           phone?: string | null
           updated_at?: string | null
         }
@@ -1763,6 +1819,41 @@ export type Database = {
           },
         ]
       }
+      report_config: {
+        Row: {
+          config: Json
+          created_at: string | null
+          id: string
+          institute_id: string
+          report_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          config?: Json
+          created_at?: string | null
+          id?: string
+          institute_id: string
+          report_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          config?: Json
+          created_at?: string | null
+          id?: string
+          institute_id?: string
+          report_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_config_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institute"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       roles: {
         Row: {
           id: string
@@ -2028,6 +2119,80 @@ export type Database = {
           },
         ]
       }
+      student_details: {
+        Row: {
+          birth_city: string | null
+          blood_type: string | null
+          created_at: string | null
+          disability_type: string | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
+          entry_year: number | null
+          eps: string | null
+          ethnicity: string | null
+          id: string
+          lives_with: string | null
+          lunch_at_school: boolean | null
+          previous_school: string | null
+          profile_id: string
+          siblings_count: number | null
+          socioeconomic_stratum: number | null
+          transport_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          birth_city?: string | null
+          blood_type?: string | null
+          created_at?: string | null
+          disability_type?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          entry_year?: number | null
+          eps?: string | null
+          ethnicity?: string | null
+          id?: string
+          lives_with?: string | null
+          lunch_at_school?: boolean | null
+          previous_school?: string | null
+          profile_id: string
+          siblings_count?: number | null
+          socioeconomic_stratum?: number | null
+          transport_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          birth_city?: string | null
+          blood_type?: string | null
+          created_at?: string | null
+          disability_type?: string | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          entry_year?: number | null
+          eps?: string | null
+          ethnicity?: string | null
+          id?: string
+          lives_with?: string | null
+          lunch_at_school?: boolean | null
+          previous_school?: string | null
+          profile_id?: string
+          siblings_count?: number | null
+          socioeconomic_stratum?: number | null
+          transport_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_details_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_enrolled: {
         Row: {
           academic_period_id: string
@@ -2130,6 +2295,53 @@ export type Database = {
             columns: ["student_enrolled_id"]
             isOneToOne: false
             referencedRelation: "student_enrolled"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teacher_details: {
+        Row: {
+          contract_type: string | null
+          created_at: string | null
+          hire_date: string | null
+          id: string
+          professional_title: string | null
+          profile_id: string
+          resolution_number: string | null
+          specialization: string | null
+          teaching_license: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contract_type?: string | null
+          created_at?: string | null
+          hire_date?: string | null
+          id?: string
+          professional_title?: string | null
+          profile_id: string
+          resolution_number?: string | null
+          specialization?: string | null
+          teaching_license?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contract_type?: string | null
+          created_at?: string | null
+          hire_date?: string | null
+          id?: string
+          professional_title?: string | null
+          profile_id?: string
+          resolution_number?: string | null
+          specialization?: string | null
+          teaching_license?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_details_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

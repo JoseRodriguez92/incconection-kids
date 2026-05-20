@@ -25,7 +25,11 @@ const ITEMS_PER_PAGE = 10;
 
 export function UserListManagement() {
   const supabase = createClient();
-  const { profilesList, loading: usersLoading, getAllProfiles } = useUserManagement();
+  const {
+    profilesList,
+    loading: usersLoading,
+    getAllProfiles,
+  } = useUserManagement();
   const { rolesList, loading: rolesLoading } = useRoleManagement();
 
   const [search, setSearch] = useState("");
@@ -33,17 +37,29 @@ export function UserListManagement() {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string;
+    name: string;
+    email: string;
+  } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [emailChangeUser, setEmailChangeUser] = useState<{ id: string; email: string; name: string } | null>(null);
+  const [emailChangeUser, setEmailChangeUser] = useState<{
+    id: string;
+    email: string;
+    name: string;
+  } | null>(null);
 
-  const [conditionsCatalog, setConditionsCatalog] = useState<ConditionItem[]>([]);
+  const [conditionsCatalog, setConditionsCatalog] = useState<ConditionItem[]>(
+    [],
+  );
 
   useEffect(() => {
     supabase
       .from("learning_condition")
       .select("id, name, color")
-      .then(({ data }) => { if (data) setConditionsCatalog(data); });
+      .then(({ data }) => {
+        if (data) setConditionsCatalog(data);
+      });
   }, []);
 
   const filtered = filterUsersBySearch(profilesList, search);
@@ -62,7 +78,9 @@ export function UserListManagement() {
       setDeleteTarget(null);
       await getAllProfiles();
     } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Error al eliminar el usuario");
+      toast.error(
+        err instanceof Error ? err.message : "Error al eliminar el usuario",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -71,7 +89,9 @@ export function UserListManagement() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Lista de Usuarios</h2>
+        <h2 className="text-2xl font-bold text-foreground">
+          Lista de Usuarios
+        </h2>
         <div className="flex gap-2">
           <BulkCreateUsers rolesList={rolesList} onFinish={getAllProfiles} />
           <Button onClick={() => setIsCreateOpen(true)}>
@@ -95,7 +115,10 @@ export function UserListManagement() {
               <Input
                 placeholder="Buscar usuarios por nombre o email..."
                 value={search}
-                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-10"
               />
             </div>

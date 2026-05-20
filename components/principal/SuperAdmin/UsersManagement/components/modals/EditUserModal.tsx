@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Camera, Edit, Loader2 } from "lucide-react";
+import { Camera, Edit, Loader2, Trash2 } from "lucide-react";
 
 const LocationPicker = dynamic(
   () => import("../LocationPicker").then((m) => ({ default: m.LocationPicker })),
@@ -66,6 +66,9 @@ export function EditUserModal({
   const [showAvatarUrlInput, setShowAvatarUrlInput] = useState(false);
   const [avatarUrlInput, setAvatarUrlInput] = useState("");
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
+  const [localSignatureUrl, setLocalSignatureUrl] = useState<string | null>(null);
+  const [uploadingSignature, setUploadingSignature] = useState(false);
+
   const [locationData, setLocationData] = useState<{
     address: string;
     latitude: number | null;
@@ -83,7 +86,13 @@ export function EditUserModal({
       phone: user.phone || "",
       document_type: user.document_type || "",
       document_number: user.document_number || "",
+      birth_date: user.birth_date || "",
+      city: user.city || "",
+      gender: user.gender || "",
+      nationality: user.nationality || "",
+      signature_url: user.signature_url || "",
     });
+    setLocalSignatureUrl(user.signature_url || null);
     setRoles(user.roles || []);
     const existingConditions = (user.conditions || [])
       .map((c: any) => c.learning_condition)
@@ -107,6 +116,7 @@ export function EditUserModal({
     setShowAvatarUrlInput(false);
     setAvatarUrlInput("");
     setLocalAvatarUrl(null);
+    setLocalSignatureUrl(null);
     setLocationData({ address: "", latitude: null, longitude: null });
     onClose();
   };
@@ -213,6 +223,70 @@ export function EditUserModal({
     }
   };
 
+  const handleSignatureChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Solo se permiten archivos de imagen");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("La imagen no debe superar los 2MB");
+      return;
+    }
+    setUploadingSignature(true);
+    try {
+      const fileExt = file.name.split(".").pop();
+      const filePath = `signatures/${user.id}_${Date.now()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("profiles-signatures")
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) {
+        if (uploadError.message.includes("Bucket not found")) {
+          throw new Error("El bucket 'profiles-signatures' no existe. Créalo en Supabase → Storage con ese nombre exacto.");
+        }
+        throw uploadError;
+      }
+      const { data: publicUrlData } = supabase.storage
+        .from("profiles-signatures")
+        .getPublicUrl(uploadData.path);
+      const url = publicUrlData.publicUrl;
+      const { error } = await supabase
+        .from("profiles")
+        .update({ signature_url: url, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+      if (error) throw error;
+      setLocalSignatureUrl(url);
+      handleField("signature_url", url);
+      toast.success("Firma actualizada");
+      onSuccess();
+    } catch (error: any) {
+      toast.error(error.message || "No se pudo subir la firma");
+    } finally {
+      setUploadingSignature(false);
+    }
+  };
+
+  const handleRemoveSignature = async () => {
+    if (!user) return;
+    setUploadingSignature(true);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ signature_url: null, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+      if (error) throw error;
+      setLocalSignatureUrl(null);
+      handleField("signature_url", "");
+      toast.success("Firma eliminada");
+      onSuccess();
+    } catch (error: any) {
+      toast.error(error.message || "No se pudo eliminar la firma");
+    } finally {
+      setUploadingSignature(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -225,6 +299,10 @@ export function EditUserModal({
       if (formData.phone) profileData.phone = formData.phone;
       if (formData.document_type) profileData.document_type = formData.document_type;
       if (formData.document_number) profileData.document_number = formData.document_number;
+      if (formData.birth_date) profileData.birth_date = formData.birth_date;
+      if (formData.city) profileData.city = formData.city;
+      if (formData.gender) profileData.gender = formData.gender;
+      if (formData.nationality) profileData.nationality = formData.nationality;
       if (locationData.address) profileData.address = locationData.address;
       if (locationData.latitude != null) profileData.latitude = locationData.latitude;
       if (locationData.longitude != null) profileData.longitude = locationData.longitude;
@@ -372,6 +450,59 @@ export function EditUserModal({
 
           <Separator />
 
+          {/* Firma */}
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Firma</h3>
+            <div className="flex flex-col items-center gap-3">
+              {localSignatureUrl ? (
+                <div className="relative w-full max-w-xs rounded-lg border bg-white p-3 flex items-center justify-center" style={{ minHeight: 80 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={localSignatureUrl} alt="Firma" className="max-h-20 object-contain" />
+                </div>
+              ) : (
+                <div className="w-full max-w-xs rounded-lg border border-dashed bg-muted/30 flex items-center justify-center" style={{ minHeight: 80 }}>
+                  <p className="text-xs text-muted-foreground">Sin firma registrada</p>
+                </div>
+              )}
+              <input
+                type="file"
+                id="signature-upload"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                onChange={handleSignatureChange}
+                disabled={uploadingSignature}
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => document.getElementById("signature-upload")?.click()}
+                  disabled={uploadingSignature}
+                >
+                  {uploadingSignature ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Camera className="w-4 h-4 mr-2" />}
+                  {localSignatureUrl ? "Cambiar firma" : "Subir firma"}
+                </Button>
+                {localSignatureUrl && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleRemoveSignature}
+                    disabled={uploadingSignature}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Eliminar
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">PNG, JPG o WebP · máx. 2 MB</p>
+            </div>
+          </div>
+
+          <Separator />
+
           {/* Datos de acceso (solo lectura) */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-foreground">Datos de acceso</h3>
@@ -470,6 +601,59 @@ export function EditUserModal({
                   onChange={(e) => handleField("document_number", e.target.value)}
                   disabled={isSubmitting}
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-city" className="text-sm font-medium">Ciudad</Label>
+                <Input
+                  id="edit-city"
+                  placeholder="Bogotá"
+                  value={formData.city}
+                  onChange={(e) => handleField("city", e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-nationality" className="text-sm font-medium">Nacionalidad</Label>
+                <Input
+                  id="edit-nationality"
+                  placeholder="Colombiana"
+                  value={formData.nationality}
+                  onChange={(e) => handleField("nationality", e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-birth_date" className="text-sm font-medium">Fecha de nacimiento</Label>
+                <Input
+                  id="edit-birth_date"
+                  type="date"
+                  value={formData.birth_date}
+                  onChange={(e) => handleField("birth_date", e.target.value)}
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-gender" className="text-sm font-medium">Género</Label>
+                <Select
+                  value={formData.gender}
+                  onValueChange={(v) => handleField("gender", v)}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="edit-gender">
+                    <SelectValue placeholder="Seleccione..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="M">Masculino</SelectItem>
+                    <SelectItem value="F">Femenino</SelectItem>
+                    <SelectItem value="otro">Otro</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
