@@ -1156,6 +1156,179 @@ export type Database = {
         }
         Relationships: []
       }
+      nurse_supply: {
+        Row: {
+          category: string | null
+          expiry_date: string | null
+          id: string
+          institute_id: string | null
+          minimum_stock: number | null
+          name: string
+          notes: string | null
+          quantity: number
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          expiry_date?: string | null
+          id?: string
+          institute_id?: string | null
+          minimum_stock?: number | null
+          name: string
+          notes?: string | null
+          quantity?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          expiry_date?: string | null
+          id?: string
+          institute_id?: string | null
+          minimum_stock?: number | null
+          name?: string
+          notes?: string | null
+          quantity?: number
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nurse_supply_institute_id_fkey"
+            columns: ["institute_id"]
+            isOneToOne: false
+            referencedRelation: "institute"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nurse_visit: {
+        Row: {
+          academic_period_id: string
+          blood_pressure: string | null
+          created_at: string
+          diagnosis: string | null
+          heart_rate: number | null
+          id: string
+          notes: string | null
+          nurse_id: string
+          parent_notified: boolean
+          parent_notified_at: string | null
+          reason: string
+          status: string
+          student_enrolled_id: string
+          symptoms: string | null
+          temperature: number | null
+          treatment: string | null
+          updated_at: string
+          visit_date: string
+          weight_kg: number | null
+        }
+        Insert: {
+          academic_period_id: string
+          blood_pressure?: string | null
+          created_at?: string
+          diagnosis?: string | null
+          heart_rate?: number | null
+          id?: string
+          notes?: string | null
+          nurse_id: string
+          parent_notified?: boolean
+          parent_notified_at?: string | null
+          reason: string
+          status?: string
+          student_enrolled_id: string
+          symptoms?: string | null
+          temperature?: number | null
+          treatment?: string | null
+          updated_at?: string
+          visit_date?: string
+          weight_kg?: number | null
+        }
+        Update: {
+          academic_period_id?: string
+          blood_pressure?: string | null
+          created_at?: string
+          diagnosis?: string | null
+          heart_rate?: number | null
+          id?: string
+          notes?: string | null
+          nurse_id?: string
+          parent_notified?: boolean
+          parent_notified_at?: string | null
+          reason?: string
+          status?: string
+          student_enrolled_id?: string
+          symptoms?: string | null
+          temperature?: number | null
+          treatment?: string | null
+          updated_at?: string
+          visit_date?: string
+          weight_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nurse_visit_academic_period_id_fkey"
+            columns: ["academic_period_id"]
+            isOneToOne: false
+            referencedRelation: "academic_period"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nurse_visit_nurse_id_fkey"
+            columns: ["nurse_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nurse_visit_student_enrolled_id_fkey"
+            columns: ["student_enrolled_id"]
+            isOneToOne: false
+            referencedRelation: "student_enrolled"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nurse_visit_medication: {
+        Row: {
+          administered_at: string
+          dosage: string | null
+          id: string
+          medication_name: string
+          notes: string | null
+          route: string | null
+          visit_id: string
+        }
+        Insert: {
+          administered_at?: string
+          dosage?: string | null
+          id?: string
+          medication_name: string
+          notes?: string | null
+          route?: string | null
+          visit_id: string
+        }
+        Update: {
+          administered_at?: string
+          dosage?: string | null
+          id?: string
+          medication_name?: string
+          notes?: string | null
+          route?: string | null
+          visit_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nurse_visit_medication_visit_id_fkey"
+            columns: ["visit_id"]
+            isOneToOne: false
+            referencedRelation: "nurse_visit"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_details: {
         Row: {
           created_at: string | null
@@ -1303,6 +1476,7 @@ export type Database = {
           longitude: number | null
           nationality: string | null
           phone: string | null
+          signature_url: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1323,6 +1497,7 @@ export type Database = {
           longitude?: number | null
           nationality?: string | null
           phone?: string | null
+          signature_url?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1343,6 +1518,7 @@ export type Database = {
           longitude?: number | null
           nationality?: string | null
           phone?: string | null
+          signature_url?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -2292,6 +2468,112 @@ export type Database = {
           },
           {
             foreignKeyName: "student_final_grade_student_enrolled_id_fkey"
+            columns: ["student_enrolled_id"]
+            isOneToOne: false
+            referencedRelation: "student_enrolled"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_health_profile: {
+        Row: {
+          allergies: string[] | null
+          blood_type: string | null
+          chronic_conditions: string | null
+          created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          id: string
+          insurance_number: string | null
+          insurance_provider: string | null
+          notes: string | null
+          student_enrolled_id: string
+          updated_at: string
+        }
+        Insert: {
+          allergies?: string[] | null
+          blood_type?: string | null
+          chronic_conditions?: string | null
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          insurance_number?: string | null
+          insurance_provider?: string | null
+          notes?: string | null
+          student_enrolled_id: string
+          updated_at?: string
+        }
+        Update: {
+          allergies?: string[] | null
+          blood_type?: string | null
+          chronic_conditions?: string | null
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          insurance_number?: string | null
+          insurance_provider?: string | null
+          notes?: string | null
+          student_enrolled_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_health_profile_student_enrolled_id_fkey"
+            columns: ["student_enrolled_id"]
+            isOneToOne: true
+            referencedRelation: "student_enrolled"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_regular_medication: {
+        Row: {
+          created_at: string
+          dosage: string | null
+          end_date: string | null
+          frequency: string | null
+          id: string
+          is_active: boolean
+          medication_name: string
+          notes: string | null
+          prescribed_by: string | null
+          start_date: string | null
+          student_enrolled_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          dosage?: string | null
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          is_active?: boolean
+          medication_name: string
+          notes?: string | null
+          prescribed_by?: string | null
+          start_date?: string | null
+          student_enrolled_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          dosage?: string | null
+          end_date?: string | null
+          frequency?: string | null
+          id?: string
+          is_active?: boolean
+          medication_name?: string
+          notes?: string | null
+          prescribed_by?: string | null
+          start_date?: string | null
+          student_enrolled_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_regular_medication_student_enrolled_id_fkey"
             columns: ["student_enrolled_id"]
             isOneToOne: false
             referencedRelation: "student_enrolled"

@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import {
   Camera, Save, LogOut, Users, GraduationCap, Book,
-  CheckCircle2, Sparkles, ShoppingCart, Brain, Route,
+  CheckCircle2, Sparkles, ShoppingCart, Brain, Route, Stethoscope,
 } from "lucide-react";
 import { AddressMapPicker } from "./AddressMapPicker";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +25,7 @@ export const roleConfig: Record<string, { label: string; icon: any; route: strin
   tienda:        { label: "Tienda",               icon: ShoppingCart,  route: "/usuario/tienda"        },
   "padre-familia":{ label: "Padre de Familia",   icon: Users,         route: "/usuario/padre-familia" },
   psicologia:    { label: "Psicología",           icon: Brain,         route: "/usuario/psicologia"    },
+  enfermeria:    { label: "Enfermería",           icon: Stethoscope,   route: "/usuario/enfermeria"    },
   profesor:      { label: "Profesor",             icon: GraduationCap, route: "/usuario/profesor"      },
   estudiante:    { label: "Estudiante",           icon: Book,          route: "/usuario/estudiante"    },
   ruta:          { label: "Ruta",                 icon: Route,         route: "/usuario/ruta"          },
@@ -89,6 +90,30 @@ export function ProfileDialog({ open, onOpenChange, onProfileSaved }: ProfileDia
   });
   const [editingStudentDetails, setEditingStudentDetails] = useState(false);
   const [loadingStudentDetails, setLoadingStudentDetails] = useState(false);
+
+  // ── Refresh roles from Supabase whenever the dialog opens ────────────────────
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const id = ManagmentStorage.getItem<string>("id_User");
+      if (!id) return;
+      const supabase = createClient();
+      const { data: prRows } = await supabase
+        .from("profiles_roles")
+        .select("role_id")
+        .eq("user_id", id);
+      if (!prRows || prRows.length === 0) return;
+      const roleIds = prRows.map((r: any) => r.role_id);
+      const { data: rolesData } = await supabase
+        .from("roles")
+        .select("name")
+        .in("id", roleIds);
+      if (rolesData && rolesData.length > 0) {
+        const freshRoles = rolesData.map((r: any) => r.name);
+        UserInfoStore.getState().setRoles(freshRoles);
+      }
+    })();
+  }, [open]);
 
   // ── Load base profile ─────────────────────────────────────────────────────────
   useEffect(() => {

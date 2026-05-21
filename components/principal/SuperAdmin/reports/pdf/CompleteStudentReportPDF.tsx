@@ -4,22 +4,19 @@ import type { ReportSignature } from "@/components/principal/SuperAdmin/reports/
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
-export interface GradeRow {
+export interface CompleteGradeRow {
   subjectName: string;
-  grade: number | null;
-  maxGrade: number;
-  cycleName?: string;
+  cycleGrades: (number | null)[];  // one entry per cycle, in order
+  finalGrade: number | null;
 }
 
-export interface GradesReportPDFProps {
+export interface CompleteStudentReportPDFProps {
   studentName: string;
   gender?: string;
-  documentType?: string;
   documentNumber?: string;
   courseName?: string;
-  gradeLevel?: string;
-  cycleName?: string;
-  grades: GradeRow[];
+  cycles: { id: string; name: string }[];
+  rows: CompleteGradeRow[];
   instituteName: string;
   instituteSubtitle?: string;
   showLogo?: boolean;
@@ -30,23 +27,19 @@ export interface GradesReportPDFProps {
   showWatermark?: boolean;
   watermarkText?: string;
   watermarkImageDataUrl?: string;
-  sidebarText?: string;
   signatures?: ReportSignature[];
-  showPerformanceLevel?: boolean;
   passingGrade?: number;
   reportDate?: string;
   city?: string;
-  disclaimer?: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function performanceLevel(grade: number, max: number, passing: number): string {
-  const norm = max > 0 ? (grade / max) * 120 : grade;
-  if (norm < passing) return "REPROBADO";
-  if (norm < 84)      return "BAJO";
-  if (norm < 95)      return "BÁSICO";
-  if (norm < 107)     return "ALTO";
+function performanceLevel(grade: number, passing: number): string {
+  if (grade < passing) return "REPROBADO";
+  if (grade < 84)      return "BAJO";
+  if (grade < 95)      return "BÁSICO";
+  if (grade < 107)     return "ALTO";
   return "SUPERIOR";
 }
 
@@ -74,12 +67,30 @@ const MONTHS_ES = [
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
 ];
 
+const GRADE_NUMS: Record<string, string> = {
+  PRIMERO: "1", SEGUNDO: "2", TERCERO: "3", CUARTO: "4", QUINTO: "5",
+  SEXTO: "6", "SÉPTIMO": "7", SEPTIMO: "7", OCTAVO: "8", NOVENO: "9",
+  "DÉCIMO": "10", DECIMO: "10", "UNDÉCIMO": "11", UNDECIMO: "11", ONCE: "11",
+};
+
+// Shorten cycle name for compact column header
+function shortCycleName(name: string): string {
+  const m = name.match(/\d+/);
+  if (m) return `T${m[0]}`;
+  const words = name.trim().split(/\s+/);
+  return words.length === 1 ? name.slice(0, 4) : words[0].slice(0, 3) + ".";
+}
+
 // ── Layout constants ──────────────────────────────────────────────────────────
 
 const PAD_L = 56;
 const PAD_R = 56;
 const PAD_T = 36;
 const PAD_B = 110;
+
+const COL_CYCLE = 46;   // width of each cycle grade column
+const COL_NF    = 52;   // final grade column
+const COL_DESEMP = 72;  // performance level column
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
@@ -88,54 +99,51 @@ const s = StyleSheet.create({
     backgroundColor: "#fff",
     paddingTop: PAD_T, paddingBottom: PAD_B,
     paddingLeft: PAD_L, paddingRight: PAD_R,
-    position: "relative",
   },
-
-  // Relative wrapper = stacking context so watermark stays behind content
   contentWrapper: { position: "relative", flex: 1 },
-  // Watermark — full A4, negative offsets cancel padding so it reaches page edges
-  watermarkImg: { position: "absolute", top: -PAD_T, left: -PAD_L, width: 595, height: 842, objectFit: "contain" as any, opacity: 0.5 },
+  watermarkImg:  { position: "absolute", top: -PAD_T, left: -PAD_L, width: 595, height: 842, objectFit: "contain" as any, opacity: 0.5 },
   watermarkText: {
     position: "absolute", top: "38%", left: 0, right: 0,
     textAlign: "center", fontSize: 72, fontFamily: "Helvetica-Bold",
     color: "#25305D", opacity: 0.5, transform: "rotate(-30deg)",
   },
 
-  // No sidebar for portrait certificate — rotation causes react-pdf layout loops
-
-  // Header — logo centered, large
-  header:          { alignItems: "center", marginBottom: 4 },
-  logoImg:         { width: 150, marginBottom: 2 },
-  logoPlaceholder: { width: 150, height: 90, backgroundColor: "#f1f5f9", borderRadius: 4, marginBottom: 2 },
-  instituteName:   { fontSize: 13, fontFamily: "Helvetica-Bold", color: "#25305D", textAlign: "center", textTransform: "uppercase", letterSpacing: 1 },
+  header:            { alignItems: "center", marginBottom: 4 },
+  logoImg:           { width: 150, marginBottom: 2 },
+  logoPlaceholder:   { width: 150, height: 90, backgroundColor: "#f1f5f9", borderRadius: 4, marginBottom: 2 },
+  instituteName:     { fontSize: 13, fontFamily: "Helvetica-Bold", color: "#25305D", textAlign: "center", textTransform: "uppercase", letterSpacing: 1 },
   instituteSubtitle: { fontSize: 8, color: "#64748b", textAlign: "center", marginTop: 1, letterSpacing: 0.3 },
 
-  divider:     { height: 1, backgroundColor: "#25305D", marginVertical: 6 },
   dividerThin: { height: 0.4, backgroundColor: "#e2e8f0", marginVertical: 6 },
 
-  // Certificate
-  certLabel:   { textAlign: "center", fontSize: 7.5, color: "#64748b", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 2 },
-  certTitle:   { textAlign: "center", fontSize: 9, fontFamily: "Helvetica-Bold", color: "#1e293b", textTransform: "uppercase", lineHeight: 1.5, marginBottom: 6 },
-  certifies:   { textAlign: "center", fontSize: 10, fontFamily: "Helvetica-Bold", color: "#25305D", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 },
+  certLabel:  { textAlign: "center", fontSize: 7.5, color: "#64748b", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 2 },
+  certTitle:  { textAlign: "center", fontSize: 9, fontFamily: "Helvetica-Bold", color: "#1e293b", textTransform: "uppercase", lineHeight: 1.5, marginBottom: 6 },
+  certifies:  { textAlign: "center", fontSize: 10, fontFamily: "Helvetica-Bold", color: "#25305D", textTransform: "uppercase", letterSpacing: 2, marginBottom: 10 },
 
-  // Body
-  bodyText:    { fontSize: 9.5, color: "#334155", lineHeight: 1.65, textAlign: "justify", marginBottom: 8 },
-  bold:        { fontFamily: "Helvetica-Bold" },
+  bodyText: { fontSize: 9.5, color: "#334155", lineHeight: 1.65, textAlign: "justify", marginBottom: 8 },
+  bold:     { fontFamily: "Helvetica-Bold" },
 
-  // Table
-  tableWrap:       { marginBottom: 4, borderWidth: 0.4, borderColor: "#e2e8f0", borderRadius: 2 },
-  tableHeader:     { flexDirection: "row", backgroundColor: "#25305D", paddingHorizontal: 10, paddingVertical: 6 },
-  tableHeaderCell: { fontSize: 7.5, fontFamily: "Helvetica-Bold", color: "#fff", textTransform: "uppercase", letterSpacing: 0.4 },
-  tableRow:        { flexDirection: "row", paddingHorizontal: 10, paddingVertical: 5, borderBottomWidth: 0.4, borderBottomColor: "#f1f5f9" },
-  tableRowAlt:     { backgroundColor: "#f8fafc" },
-  cellSubject:     { flex: 1, fontSize: 8.5, color: "#1e293b" },
-  cellGrade:       { width: 70, fontSize: 8.5, color: "#1e293b", textAlign: "right" },
-  cellLevel:       { width: 80, fontSize: 8, fontFamily: "Helvetica-Bold", textAlign: "right" },
+  // ── Table ──
+  tableWrap: { marginBottom: 4, borderWidth: 0.4, borderColor: "#e2e8f0", borderRadius: 2 },
 
-  // Closing
+  // Two header rows: cycle group header + Nota label per cycle
+  tableGroupHeader: { flexDirection: "row", backgroundColor: "#25305D", paddingHorizontal: 10, paddingVertical: 4, borderBottomWidth: 0.4, borderBottomColor: "#3d4f7a" },
+  tableSubHeader:   { flexDirection: "row", backgroundColor: "#1e3a5f", paddingHorizontal: 10, paddingVertical: 3 },
+
+  thText:       { fontSize: 7, fontFamily: "Helvetica-Bold", color: "#fff", textTransform: "uppercase", letterSpacing: 0.3, textAlign: "center" },
+  thSubText:    { fontSize: 6.5, color: "#cbd5e1", textAlign: "center" },
+  thSubjectCell:{ flex: 1, fontSize: 7, fontFamily: "Helvetica-Bold", color: "#fff", textTransform: "uppercase", letterSpacing: 0.3 },
+
+  tableRow:    { flexDirection: "row", paddingHorizontal: 10, paddingVertical: 5, borderBottomWidth: 0.4, borderBottomColor: "#f1f5f9" },
+  tableRowAlt: { backgroundColor: "#f8fafc" },
+
+  cellSubject: { flex: 1, fontSize: 8.5, color: "#1e293b" },
+  cellCycle:   { width: COL_CYCLE, fontSize: 8.5, color: "#1e293b", textAlign: "center" },
+  cellNF:      { width: COL_NF, fontSize: 8.5, fontFamily: "Helvetica-Bold", color: "#1e293b", textAlign: "center" },
+  cellDesemp:  { width: COL_DESEMP, fontSize: 7.5, fontFamily: "Helvetica-Bold", textAlign: "center" },
+
   closingText: { fontSize: 9, color: "#334155", lineHeight: 1.65, marginTop: 8, textAlign: "justify" },
 
-  // Signatures — absolute, pinned above footer
   signaturesRow:  { position: "absolute", bottom: 32, left: PAD_L, right: PAD_R, flexDirection: "row", justifyContent: "space-around" },
   signatureItem:  { flex: 1, alignItems: "center", marginHorizontal: 10 },
   signatureImage: { height: 60, width: 150, marginBottom: 3, objectFit: "contain" as any },
@@ -143,23 +151,20 @@ const s = StyleSheet.create({
   signatureName:  { fontSize: 8, fontFamily: "Helvetica-Bold", color: "#1e293b", textAlign: "center" },
   signatureLabel: { fontSize: 7, color: "#64748b", textAlign: "center", marginTop: 1 },
 
-  // Footer — absolute, bottom of page
-  footer:      { position: "absolute", bottom: 14, left: PAD_L, right: PAD_R, flexDirection: "row", justifyContent: "space-between", paddingTop: 5, borderTopWidth: 0.5, borderTopColor: "#e2e8f0" },
-  footerText:  { fontSize: 6.5, color: "#94a3b8" },
-  footerPage:  { fontSize: 6.5, color: "#94a3b8" },
+  footer:     { position: "absolute", bottom: 14, left: PAD_L, right: PAD_R, flexDirection: "row", justifyContent: "space-between", paddingTop: 5, borderTopWidth: 0.5, borderTopColor: "#e2e8f0" },
+  footerText: { fontSize: 6.5, color: "#94a3b8" },
+  footerPage: { fontSize: 6.5, color: "#94a3b8" },
 });
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function GradesReportPDF({
+export function CompleteStudentReportPDF({
   studentName,
   gender = "M",
-  documentType: _documentType = "CC",
   documentNumber = "",
   courseName = "",
-  gradeLevel = "",
-  cycleName,
-  grades = [],
+  cycles = [],
+  rows = [],
   instituteName,
   instituteSubtitle,
   showLogo = true,
@@ -171,12 +176,11 @@ export function GradesReportPDF({
   watermarkText = "CONFIDENCIAL",
   watermarkImageDataUrl,
   signatures = [],
-  showPerformanceLevel = true,
   passingGrade = 60,
   reportDate,
   city = "Bogotá, D.C.",
-}: GradesReportPDFProps) {
-  const date = reportDate ? new Date(reportDate) : new Date();
+}: CompleteStudentReportPDFProps) {
+  const date  = reportDate ? new Date(reportDate) : new Date();
   const day   = date.getDate();
   const month = MONTHS_ES[date.getMonth()] ?? "";
   const year  = date.getFullYear();
@@ -186,33 +190,21 @@ export function GradesReportPDF({
     : String(year);
 
   const certTitle = headerTitle || `EL SUSCRITO RECTOR DEL ${instituteName.toUpperCase()}`;
-  const footer    = footerText  || `${instituteName} — Reporte de Calificaciones`;
+  const footer    = footerText  || `${instituteName} — Boletín de Calificaciones`;
 
-  const isFem = gender === "F" || gender === "femenino" || gender === "Femenino";
-  const artEst    = isFem ? "la" : "el";
-  const pronIden  = isFem ? "identificada" : "identificado";
-  const artInt    = isFem ? "de la interesada" : "del interesado";
+  const isFem    = gender === "F" || gender === "femenino" || gender === "Femenino";
+  const artEst   = isFem ? "la" : "el";
+  const pronIden = isFem ? "identificada" : "identificado";
+  const artInt   = isFem ? "de la interesada" : "del interesado";
 
-  const GRADE_NUMS: Record<string, string> = {
-    PRIMERO: "1", SEGUNDO: "2", TERCERO: "3", CUARTO: "4", QUINTO: "5",
-    SEXTO: "6", "SÉPTIMO": "7", SEPTIMO: "7", OCTAVO: "8", NOVENO: "9",
-    "DÉCIMO": "10", DECIMO: "10", "UNDÉCIMO": "11", UNDECIMO: "11", ONCE: "11",
-  };
   const gradeNum = courseName ? (GRADE_NUMS[courseName.toUpperCase()] ?? "") : "";
-  const CYCLE_DISPLAY: Record<string, string> = {
-    "1": "Primer Trimestre", "2": "Segundo Trimestre", "3": "Tercer Trimestre", "4": "Cuarto Trimestre",
-    "I": "Primer Trimestre", "II": "Segundo Trimestre", "III": "Tercer Trimestre", "IV": "Cuarto Trimestre",
-  };
-  const cycleStr = cycleName ? (CYCLE_DISPLAY[cycleName.trim()] ?? cycleName) : "el período";
 
   return (
     <Document>
       <Page size="A4" style={s.page}>
-
-        {/* ── Content wrapper: position relative = stacking context ── */}
         <View style={s.contentWrapper}>
 
-          {/* Watermark — absolute inside wrapper, drawn first (behind content) */}
+          {/* Watermark */}
           {showWatermark && watermarkImageDataUrl
             ? <Image src={watermarkImageDataUrl} style={s.watermarkImg} />
             : null}
@@ -220,7 +212,7 @@ export function GradesReportPDF({
             ? <Text style={s.watermarkText}>{watermarkText}</Text>
             : null}
 
-          {/* ── Header ── */}
+          {/* Header */}
           <View style={s.header}>
             {showLogo && logoDataUrl
               ? <Image src={logoDataUrl} style={s.logoImg} />
@@ -235,46 +227,55 @@ export function GradesReportPDF({
               : null}
           </View>
 
-          {/* ── Certificate header ── */}
-          <Text style={s.certLabel}>Reporte de Calificaciones</Text>
+          {/* Certificate header */}
+          <Text style={s.certLabel}>Boletín de Calificaciones</Text>
           <Text style={s.certTitle}>{certTitle}</Text>
           <Text style={s.certifies}>C E R T I F I C A :</Text>
 
-          {/* ── Body ── */}
+          {/* Body */}
           <Text style={s.bodyText}>
             {"    "}{"Que "}{artEst}{" estudiante "}
             <Text style={s.bold}>{studentName}</Text>
             {", "}{pronIden}{" con el documento N°"}
-            <Text style={s.bold}>{documentNumber}</Text>
-            {cycleName ? ", cursó de manera parcial hasta el " : ", cursó durante "}
-            <Text style={s.bold}>{cycleStr}</Text>
-            {courseName ? ` del grado ${courseName.toUpperCase()}` : ""}
+            <Text style={s.bold}>{documentNumber || "—"}</Text>
+            {courseName ? `, cursó el período académico ${year} en el grado ${courseName.toUpperCase()}` : `, cursó el período académico ${year}`}
             {gradeNum ? ` (${gradeNum}°)` : ""}
-            {gradeLevel && gradeLevel !== courseName ? ` de ${gradeLevel}` : ""}
             {", hasta el día "}
             <Text style={s.bold}>{day} de {month} del {year}</Text>
-            {", así:"}
+            {", obteniendo las siguientes valoraciones:"}
           </Text>
 
-          {/* ── Grades table ── */}
+          {/* Grades table */}
           <View style={s.tableWrap}>
-            <View style={s.tableHeader}>
-              <Text style={[s.tableHeaderCell, { flex: 1 }]}>Asignatura</Text>
-              <Text style={[s.tableHeaderCell, { width: 70, textAlign: "right" }]}>Valoración</Text>
-              {showPerformanceLevel
-                ? <Text style={[s.tableHeaderCell, { width: 80, textAlign: "right" }]}>Desempeño</Text>
-                : null}
+            {/* Row 1: Group headers — Asignatura | cycles | N.F. | Desempeño */}
+            <View style={s.tableGroupHeader}>
+              <Text style={[s.thSubjectCell]}>Asignatura</Text>
+              {cycles.map((c) => (
+                <Text key={c.id} style={[s.thText, { width: COL_CYCLE }]}>
+                  {shortCycleName(c.name)}
+                </Text>
+              ))}
+              <Text style={[s.thText, { width: COL_NF }]}>N.F.</Text>
+              <Text style={[s.thText, { width: COL_DESEMP }]}>Desempeño</Text>
             </View>
-            {grades.map((row, i) => {
-              const hasGrade = row.grade !== null;
-              const level = hasGrade ? performanceLevel(row.grade as number, row.maxGrade, passingGrade) : "—";
+
+            {/* Data rows */}
+            {rows.map((row, i) => {
+              const hasNF    = row.finalGrade !== null;
+              const level    = hasNF ? performanceLevel(row.finalGrade as number, passingGrade) : "—";
+              const desempColor = hasNF ? levelColor(level) : "#94a3b8";
               return (
                 <View key={i} style={[s.tableRow, i % 2 === 1 ? s.tableRowAlt : {}]}>
                   <Text style={s.cellSubject}>{row.subjectName}</Text>
-                  <Text style={s.cellGrade}>{hasGrade ? `${row.grade}/${row.maxGrade}` : "—"}</Text>
-                  {showPerformanceLevel
-                    ? <Text style={[s.cellLevel, { color: hasGrade ? levelColor(level) : "#94a3b8" }]}>{level}</Text>
-                    : null}
+                  {row.cycleGrades.map((g, ci) => (
+                    <Text key={ci} style={[s.cellCycle, { color: g === null ? "#94a3b8" : "#1e293b" }]}>
+                      {g === null ? "—" : String(g)}
+                    </Text>
+                  ))}
+                  <Text style={[s.cellNF, { color: hasNF ? "#1e293b" : "#94a3b8" }]}>
+                    {hasNF ? String(row.finalGrade) : "—"}
+                  </Text>
+                  <Text style={[s.cellDesemp, { color: desempColor }]}>{level}</Text>
                 </View>
               );
             })}
@@ -282,7 +283,7 @@ export function GradesReportPDF({
 
           <View style={s.dividerThin} />
 
-          {/* ── Closing text ── */}
+          {/* Closing text */}
           <Text style={s.closingText}>
             {"    "}{"La presente se expide a solicitud "}{artInt}{" en "}{city}{", a los "}
             <Text style={s.bold}>{day === 1 ? `un (1) día` : `${numberToWords(day)} (${day}) días`}</Text>
@@ -293,32 +294,29 @@ export function GradesReportPDF({
             {"."}
           </Text>
 
-        </View>{/* end contentWrapper */}
+        </View>
 
-        {/* ── Signatures — absolute in Page, pinned above footer ── */}
-        {signatures.length > 0
-          ? (
-            <View style={s.signaturesRow}>
-              {signatures.map((sig) => (
-                <View key={sig.id} style={s.signatureItem}>
-                  {sig.signatureImageUrl
-                    ? <Image src={sig.signatureImageUrl} style={s.signatureImage} />
-                    : null}
-                  {sig.showLine ? <View style={s.signatureLine} /> : null}
-                  <Text style={s.signatureName}>{sig.name}</Text>
-                  <Text style={s.signatureLabel}>{sig.label}</Text>
-                </View>
-              ))}
-            </View>
-          )
-          : null}
+        {/* Signatures */}
+        {signatures.length > 0 ? (
+          <View style={s.signaturesRow}>
+            {signatures.map((sig) => (
+              <View key={sig.id} style={s.signatureItem}>
+                {sig.signatureImageUrl
+                  ? <Image src={sig.signatureImageUrl} style={s.signatureImage} />
+                  : null}
+                {sig.showLine ? <View style={s.signatureLine} /> : null}
+                <Text style={s.signatureName}>{sig.name}</Text>
+                <Text style={s.signatureLabel}>{sig.label}</Text>
+              </View>
+            ))}
+          </View>
+        ) : null}
 
-        {/* ── Footer — absolute in Page ── */}
+        {/* Footer */}
         <View style={s.footer}>
           <Text style={s.footerText}>{footer}</Text>
           {showPageNumbers ? <Text style={s.footerPage}>Pág. 1</Text> : null}
         </View>
-
       </Page>
     </Document>
   );

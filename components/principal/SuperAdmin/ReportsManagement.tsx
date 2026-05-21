@@ -82,7 +82,7 @@ const reports: Report[] = [
     description:
       "Listado completo de estudiantes matriculados con grupo asignado.",
     category: "Académico",
-    format: ["PDF", "Excel"],
+    format: ["PDF"],
     icon: Users,
     colorText: "text-blue-600",
     colorBg: "bg-blue-50 dark:bg-blue-950/30",
@@ -95,7 +95,7 @@ const reports: Report[] = [
     description:
       "Estadísticas de asistencia por estudiante, materia y período.",
     category: "Académico",
-    format: ["PDF", "Excel"],
+    format: ["PDF"],
     icon: ClipboardList,
     colorText: "text-emerald-600",
     colorBg: "bg-emerald-50 dark:bg-emerald-950/30",
@@ -120,7 +120,7 @@ const reports: Report[] = [
     description:
       "Profesores matriculados, materias asignadas y grupos a cargo.",
     category: "Administrativo",
-    format: ["PDF", "Excel"],
+    format: ["PDF"],
     icon: GraduationCap,
     colorText: "text-purple-600",
     colorBg: "bg-purple-50 dark:bg-purple-950/30",
@@ -240,9 +240,9 @@ function ReportFilterDialog({
           (async () => {
             const { data } = await supabase
               .from("academic_period")
-              .select("id, name")
+              .select("id, name, start_date")
               .eq("institute_id", institute_id)
-              .order("start_date", { ascending: false });
+              .order("name", { ascending: false });
             if (data) setPeriods(data);
           })(),
         );
@@ -372,6 +372,7 @@ function ReportFilterDialog({
       .from("academic_period_has_cycle")
       .select("id, cycles:cycle_id(name)")
       .eq("academic_period_id", filters.periodId)
+      .eq("is_active", true)
       .then(({ data }) => {
         const opts = (data ?? [])
           .map((r: any) => ({ id: r.id, name: r.cycles?.name ?? "—" }))
@@ -519,231 +520,261 @@ function ReportFilterDialog({
                    CALIFICACIONES — UI rediseñada
                    ══════════════════════════════════════════ */
                 <>
-                  {/* Parcial | Completo */}
-                  <div className="flex gap-1 p-1 bg-muted rounded-lg">
-                    {(["parcial", "completo"] as const).map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => {
-                          setGradesType(type);
-                          setGradesScope("grupo");
-                          setFilters(EMPTY_FILTERS);
-                          setSelectedStudentId("");
-                          setStudentSearch("");
-                          setShowStudentList(false);
-                        }}
-                        className={cn(
-                          "flex-1 py-1.5 text-xs font-medium rounded-md transition-all capitalize",
-                          gradesType === type
-                            ? "bg-background shadow-sm text-foreground"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        {type === "parcial" ? "Parcial" : "Completo"}
-                      </button>
-                    ))}
-                  </div>
-
-                  {/* Período — shared by both Parcial and Completo */}
-                  <div className="space-y-1.5">
-                    <Label className="flex items-center gap-1.5 text-xs font-medium">
-                      <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
-                      Período académico
-                      <span className="text-destructive ml-0.5">*</span>
-                    </Label>
-                    <Select value={filters.periodId} onValueChange={(v) => set("periodId", v)}>
-                      <SelectTrigger className="h-9">
-                        <SelectValue placeholder="Selecciona un período" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {periods.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Ciclo / Trimestre — Parcial only, required */}
-                  {gradesType === "parcial" && filters.periodId && (
-                    <div className="space-y-1.5">
-                      <Label className="flex items-center gap-1.5 text-xs font-medium">
-                        <RefreshCw className="w-3.5 h-3.5 text-muted-foreground" />
-                        Ciclo / Trimestre
-                        <span className="text-destructive ml-0.5">*</span>
-                        {loadingCycles && <Loader2 className="w-3 h-3 animate-spin ml-auto text-muted-foreground" />}
-                      </Label>
-                      <Select
-                        value={filters.cycleId}
-                        onValueChange={(v) => set("cycleId", v)}
-                        disabled={loadingCycles}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder={loadingCycles ? "Cargando ciclos..." : cycles.length === 0 ? "Sin ciclos en este período" : "Selecciona un ciclo"} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {cycles.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {/* Curso — aparece cuando hay período */}
-                  {filters.periodId && (
-                    <div className="space-y-1.5">
-                      <Label className="flex items-center gap-1.5 text-xs font-medium">
-                        <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
-                        Curso
-                        <span className="text-destructive ml-0.5">*</span>
-                        {loadingCourses && <Loader2 className="w-3 h-3 animate-spin ml-auto text-muted-foreground" />}
-                      </Label>
-                      <Select
-                        value={filters.courseId}
-                        onValueChange={(v) => set("courseId", v)}
-                        disabled={loadingCourses}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder={
-                            loadingCourses ? "Cargando cursos..."
-                            : courses.length === 0 ? "Sin cursos en este período"
-                            : "Selecciona un curso"
-                          } />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {courses.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
-
-                  {/* Grupo | Estudiante toggle — aparece cuando hay curso */}
-                  {filters.courseId && (
-                    <div className="flex gap-1 p-1 bg-muted rounded-lg">
-                      {(["grupo", "estudiante"] as const).map((scope) => (
+                  {/* ── Tipo de reporte: Parcial / Completo ── */}
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                      Tipo de reporte
+                    </p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["parcial", "completo"] as const).map((type) => (
                         <button
-                          key={scope}
+                          key={type}
                           onClick={() => {
-                            setGradesScope(scope);
-                            setFilters((prev) => ({ ...prev, groupId: "" }));
+                            setGradesType(type);
+                            setGradesScope("grupo");
+                            setFilters(EMPTY_FILTERS);
                             setSelectedStudentId("");
                             setStudentSearch("");
                             setShowStudentList(false);
                           }}
                           className={cn(
-                            "flex-1 py-1.5 text-xs font-medium rounded-md transition-all",
-                            gradesScope === scope
-                              ? "bg-background shadow-sm text-foreground"
-                              : "text-muted-foreground hover:text-foreground",
+                            "flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 transition-all",
+                            gradesType === type
+                              ? "border-primary bg-primary/5 shadow-sm"
+                              : "border-border/60 bg-muted/30 hover:bg-muted/60 hover:border-border",
                           )}
                         >
-                          {scope === "grupo" ? "Grupo" : "Estudiante"}
+                          {type === "parcial"
+                            ? <RefreshCw className={cn("w-4 h-4", gradesType === type ? "text-primary" : "text-muted-foreground")} />
+                            : <CalendarRange className={cn("w-4 h-4", gradesType === type ? "text-primary" : "text-muted-foreground")} />
+                          }
+                          <span className={cn("text-xs font-semibold", gradesType === type ? "text-primary" : "text-muted-foreground")}>
+                            {type === "parcial" ? "Parcial" : "Completo"}
+                          </span>
+                          <span className="text-[9px] text-muted-foreground/70 leading-tight text-center">
+                            {type === "parcial" ? "Un trimestre" : "Todos los ciclos"}
+                          </span>
                         </button>
                       ))}
                     </div>
-                  )}
+                  </div>
 
-                  {/* Grupo — aparece cuando hay curso */}
-                  {filters.courseId && (
+                  {/* ── Divider ── */}
+                  <div className="h-px bg-border/40" />
+
+                  {/* ── Período + Ciclo (2 cols cuando es parcial) ── */}
+                  <div className={cn("grid gap-3", gradesType === "parcial" ? "grid-cols-2" : "grid-cols-1")}>
                     <div className="space-y-1.5">
                       <Label className="flex items-center gap-1.5 text-xs font-medium">
-                        <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                        Grupo
+                        <CalendarDays className="w-3.5 h-3.5 text-muted-foreground" />
+                        Período
                         <span className="text-destructive ml-0.5">*</span>
-                        {loadingGroups && <Loader2 className="w-3 h-3 animate-spin ml-auto text-muted-foreground" />}
                       </Label>
-                      <Select
-                        value={filters.groupId}
-                        onValueChange={(v) => set("groupId", v)}
-                        disabled={loadingGroups}
-                      >
-                        <SelectTrigger className="h-9">
-                          <SelectValue placeholder={
-                            loadingGroups ? "Cargando grupos..."
-                            : groups.length === 0 ? "Sin grupos en este curso"
-                            : "Selecciona un grupo"
-                          } />
+                      <Select value={filters.periodId} onValueChange={(v) => set("periodId", v)}>
+                        <SelectTrigger className="h-9 w-full text-xs">
+                          <SelectValue placeholder="Selecciona" />
                         </SelectTrigger>
                         <SelectContent>
-                          {groups.map((g) => (
-                            <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                          {periods.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
+
+                    {gradesType === "parcial" && (
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5 text-xs font-medium">
+                          <CircleDot className="w-3.5 h-3.5 text-muted-foreground" />
+                          Trimestre
+                          <span className="text-destructive ml-0.5">*</span>
+                          {loadingCycles && <Loader2 className="w-3 h-3 animate-spin ml-auto text-muted-foreground" />}
+                        </Label>
+                        <Select
+                          value={filters.cycleId}
+                          onValueChange={(v) => set("cycleId", v)}
+                          disabled={!filters.periodId || loadingCycles}
+                        >
+                          <SelectTrigger className="h-9 w-full text-xs">
+                            <SelectValue placeholder={
+                              !filters.periodId ? "Elige período"
+                              : loadingCycles ? "Cargando..."
+                              : cycles.length === 0 ? "Sin ciclos"
+                              : "Selecciona"
+                            } />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {cycles.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ── Curso ── */}
+                  {filters.periodId && (gradesType === "completo" || filters.cycleId) && (
+                    <>
+                      <div className="h-px bg-border/40" />
+
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5 text-xs font-medium">
+                          <GraduationCap className="w-3.5 h-3.5 text-muted-foreground" />
+                          Curso
+                          <span className="text-destructive ml-0.5">*</span>
+                          {loadingCourses && <Loader2 className="w-3 h-3 animate-spin ml-auto text-muted-foreground" />}
+                        </Label>
+                        <Select
+                          value={filters.courseId}
+                          onValueChange={(v) => set("courseId", v)}
+                          disabled={loadingCourses}
+                        >
+                          <SelectTrigger className="h-9 w-full">
+                            <SelectValue placeholder={
+                              loadingCourses ? "Cargando cursos..."
+                              : courses.length === 0 ? "Sin cursos en este período"
+                              : "Selecciona un curso"
+                            } />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {courses.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </>
                   )}
 
-                  {/* Estudiante — solo en scope "estudiante" y con grupo seleccionado */}
-                  {gradesScope === "estudiante" && filters.groupId && (
-                    <div className="space-y-1.5">
-                      <Label className="flex items-center gap-1.5 text-xs font-medium">
-                        <User className="w-3.5 h-3.5 text-muted-foreground" />
-                        Estudiante
-                        <span className="text-destructive ml-0.5">*</span>
-                        {loadingStudents && <Loader2 className="w-3 h-3 animate-spin ml-auto text-muted-foreground" />}
-                      </Label>
-                      {selectedStudentId ? (
-                        <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/30 rounded-md border border-indigo-200 dark:border-indigo-800">
-                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-500 shrink-0" />
-                          <span className="text-xs text-indigo-700 dark:text-indigo-300 font-medium flex-1 truncate">
-                            {students.find((s) => s.id === selectedStudentId)?.full_name}
-                          </span>
+                  {/* ── Scope: Grupo / Estudiante + Grupo select ── */}
+                  {filters.courseId && (
+                    <>
+                      <div className="grid grid-cols-2 gap-2">
+                        {(["grupo", "estudiante"] as const).map((scope) => (
                           <button
-                            onClick={() => { setSelectedStudentId(""); setStudentSearch(""); setShowStudentList(false); }}
-                            className="text-indigo-400 hover:text-indigo-600 transition-colors"
+                            key={scope}
+                            onClick={() => {
+                              setGradesScope(scope);
+                              setFilters((prev) => ({ ...prev, groupId: "" }));
+                              setSelectedStudentId("");
+                              setStudentSearch("");
+                              setShowStudentList(false);
+                            }}
+                            className={cn(
+                              "flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-xs font-semibold transition-all",
+                              gradesScope === scope
+                                ? "border-primary bg-primary/5 text-primary shadow-sm"
+                                : "border-border/60 bg-muted/30 text-muted-foreground hover:bg-muted/60 hover:border-border",
+                            )}
                           >
-                            <X className="w-3.5 h-3.5" />
+                            {scope === "grupo"
+                              ? <Users className="w-3.5 h-3.5" />
+                              : <User className="w-3.5 h-3.5" />
+                            }
+                            {scope === "grupo" ? "Grupo" : "Estudiante"}
                           </button>
-                        </div>
-                      ) : (
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
-                          <Input
-                            value={studentSearch}
-                            onChange={(e) => { setStudentSearch(e.target.value); setShowStudentList(true); }}
-                            onFocus={() => setShowStudentList(true)}
-                            placeholder={loadingStudents ? "Cargando estudiantes..." : "Buscar por nombre o documento..."}
-                            disabled={loadingStudents}
-                            className="h-9 pl-8 text-sm"
-                          />
-                          {showStudentList && studentSearch.length >= 1 && (
-                            <div className="absolute z-10 top-full mt-1 w-full border rounded-md bg-background shadow-md divide-y max-h-44 overflow-y-auto">
-                              {students
-                                .filter((s) =>
-                                  s.full_name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
-                                  s.document_number?.includes(studentSearch),
-                                )
-                                .slice(0, 10)
-                                .map((s) => (
-                                  <button
-                                    key={s.id}
-                                    onMouseDown={(e) => e.preventDefault()}
-                                    onClick={() => {
-                                      setSelectedStudentId(s.id);
-                                      setStudentSearch(s.full_name ?? "");
-                                      setShowStudentList(false);
-                                    }}
-                                    className="w-full text-left px-3 py-2 text-sm hover:bg-muted/60 transition-colors flex items-center justify-between gap-2"
-                                  >
-                                    <span className="font-medium truncate">{s.full_name}</span>
-                                    {s.document_number && (
-                                      <span className="text-[10px] text-muted-foreground shrink-0 font-mono">{s.document_number}</span>
-                                    )}
-                                  </button>
-                                ))}
-                              {students.filter((s) =>
-                                s.full_name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
-                                s.document_number?.includes(studentSearch),
-                              ).length === 0 && (
-                                <div className="px-3 py-2 text-sm text-muted-foreground">Sin resultados</div>
+                        ))}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="flex items-center gap-1.5 text-xs font-medium">
+                          <Users className="w-3.5 h-3.5 text-muted-foreground" />
+                          Grupo
+                          <span className="text-destructive ml-0.5">*</span>
+                          {loadingGroups && <Loader2 className="w-3 h-3 animate-spin ml-auto text-muted-foreground" />}
+                        </Label>
+                        <Select
+                          value={filters.groupId}
+                          onValueChange={(v) => set("groupId", v)}
+                          disabled={loadingGroups}
+                        >
+                          <SelectTrigger className="h-9 w-full">
+                            <SelectValue placeholder={
+                              loadingGroups ? "Cargando grupos..."
+                              : groups.length === 0 ? "Sin grupos en este curso"
+                              : "Selecciona un grupo"
+                            } />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {groups.map((g) => (
+                              <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Estudiante — solo en scope "estudiante" y con grupo seleccionado */}
+                      {gradesScope === "estudiante" && filters.groupId && (
+                        <div className="space-y-1.5">
+                          <Label className="flex items-center gap-1.5 text-xs font-medium">
+                            <User className="w-3.5 h-3.5 text-muted-foreground" />
+                            Estudiante
+                            <span className="text-destructive ml-0.5">*</span>
+                            {loadingStudents && <Loader2 className="w-3 h-3 animate-spin ml-auto text-muted-foreground" />}
+                          </Label>
+                          {selectedStudentId ? (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-primary/5 rounded-lg border border-primary/20">
+                              <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                              <span className="text-xs text-foreground font-medium flex-1 truncate">
+                                {students.find((s) => s.id === selectedStudentId)?.full_name}
+                              </span>
+                              <button
+                                onClick={() => { setSelectedStudentId(""); setStudentSearch(""); setShowStudentList(false); }}
+                                className="text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="relative">
+                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                              <Input
+                                value={studentSearch}
+                                onChange={(e) => { setStudentSearch(e.target.value); setShowStudentList(true); }}
+                                onFocus={() => setShowStudentList(true)}
+                                placeholder={loadingStudents ? "Cargando estudiantes..." : "Nombre o documento..."}
+                                disabled={loadingStudents}
+                                className="h-9 pl-8 text-sm"
+                              />
+                              {showStudentList && studentSearch.length >= 1 && (
+                                <div className="absolute z-10 top-full mt-1 w-full border rounded-md bg-background shadow-md divide-y max-h-44 overflow-y-auto">
+                                  {students
+                                    .filter((s) =>
+                                      s.full_name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                                      s.document_number?.includes(studentSearch),
+                                    )
+                                    .slice(0, 10)
+                                    .map((s) => (
+                                      <button
+                                        key={s.id}
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        onClick={() => {
+                                          setSelectedStudentId(s.id);
+                                          setStudentSearch(s.full_name ?? "");
+                                          setShowStudentList(false);
+                                        }}
+                                        className="w-full text-left px-3 py-2 text-sm hover:bg-muted/60 transition-colors flex items-center justify-between gap-2"
+                                      >
+                                        <span className="font-medium truncate">{s.full_name}</span>
+                                        {s.document_number && (
+                                          <span className="text-[10px] text-muted-foreground shrink-0 font-mono">{s.document_number}</span>
+                                        )}
+                                      </button>
+                                    ))}
+                                  {students.filter((s) =>
+                                    s.full_name?.toLowerCase().includes(studentSearch.toLowerCase()) ||
+                                    s.document_number?.includes(studentSearch),
+                                  ).length === 0 && (
+                                    <div className="px-3 py-2 text-sm text-muted-foreground">Sin resultados</div>
+                                  )}
+                                </div>
                               )}
                             </div>
                           )}
                         </div>
                       )}
-                    </div>
+                    </>
                   )}
                 </>
               ) : (

@@ -60,6 +60,7 @@ export async function middleware(request: NextRequest) {
     "/usuario/padre-familia": ["padre-familia"],
     "/usuario/tienda": ["tienda"],
     "/usuario/psicologia": ["psicologia"],
+    "/usuario/enfermeria": ["enfermeria"],
     "/usuario/ruta": ["ruta"],
   };
 

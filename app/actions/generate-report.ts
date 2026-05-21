@@ -2,6 +2,7 @@
 
 import fs from "fs";
 import path from "path";
+import * as XLSX from "xlsx";
 import { createClient } from "@/lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { renderToBuffer } from "@react-pdf/renderer";
@@ -23,6 +24,10 @@ import {
   GradesGroupReportPDF,
   type GroupGradeRow,
 } from "@/components/principal/SuperAdmin/reports/pdf/GradesGroupReportPDF";
+import {
+  CompleteStudentReportPDF,
+  type CompleteGradeRow,
+} from "@/components/principal/SuperAdmin/reports/pdf/CompleteStudentReportPDF";
 import {
   REPORT_CONFIG_DEFAULTS,
   type StudentsReportConfig,
@@ -659,7 +664,7 @@ async function generateGradesReport(params: GenerateReportParams): Promise<Gener
   // Signature images — always re-fetched from profile if profileId is set
   const signatures = await resolveSignatures(config.signatures ?? []);
 
-  // Cycle name (cycleId = academic_period_has_cycle.id)
+  // Cycle name + end date (cycleId = academic_period_has_cycle.id)
   let cycleName: string | undefined;
   if (cycleId) {
     const { data } = await supabase
@@ -718,7 +723,7 @@ async function generateGradesReport(params: GenerateReportParams): Promise<Gener
     // Student profile
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name, document_type, document_number")
+      .select("full_name, document_type, document_number, gender")
       .eq("id", studentId)
       .maybeSingle();
 
@@ -755,27 +760,25 @@ async function generateGradesReport(params: GenerateReportParams): Promise<Gener
       maxMap[act.group_has_class_id] = (maxMap[act.group_has_class_id] ?? 0) + (act.grade_percentage ?? 0);
     }
 
-    const gradeRows: GradeRow[] = (gradesData ?? []).map((g: any) => {
-      const cls = classes.find((c) => c.id === g.group_has_class_id);
-      return {
-        subjectName: cls?.subjectName ?? "—",
-        grade: g.grade,
-        maxGrade: maxMap[g.group_has_class_id] || 120,
-        cycleName,
-      };
-    }).sort((a, b) => a.subjectName.localeCompare(b.subjectName, "es"));
+    const gradeMap: Record<string, number> = {};
+    for (const g of (gradesData ?? [])) gradeMap[g.group_has_class_id] = g.grade;
+
+    const gradeRows: GradeRow[] = classes.map((cls) => ({
+      subjectName: cls.subjectName,
+      grade: gradeMap[cls.id] ?? null,
+      maxGrade: maxMap[cls.id] || 120,
+      cycleName,
+    })).sort((a, b) => a.subjectName.localeCompare(b.subjectName, "es"));
 
     const studentName    = (profile as any)?.full_name       ?? "Estudiante";
     const documentType   = (profile as any)?.document_type   ?? "CC";
     const documentNumber = (profile as any)?.document_number ?? "";
-
-    // Grade level from group
-    const gradeLevel = courseName ?? "";
+    const gender         = (profile as any)?.gender          ?? "M";
 
     const element = React.createElement(GradesReportPDF, {
       ...pdfCommon,
-      studentName, documentType, documentNumber,
-      courseName, gradeLevel, grades: gradeRows,
+      studentName, gender, documentType, documentNumber,
+      courseName, gradeLevel: courseName ?? "", grades: gradeRows,
       reportDate: new Date().toISOString(),
     });
 
@@ -885,54 +888,80 @@ async function generateGradesReport(params: GenerateReportParams): Promise<Gener
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // COMPLETO + ESTUDIANTE — student_final_grade del año
+  // COMPLETO + ESTUDIANTE — boletín con nota por trimestre + nota final
   // ════════════════════════════════════════════════════════════════════════════
   if (gradesType === "completo" && gradesScope === "estudiante") {
     if (!studentId) return { error: "Selecciona un estudiante." };
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name, document_type, document_number")
-      .eq("id", studentId)
-      .maybeSingle();
-
-    const { data: enrolled } = await supabase
-      .from("student_enrolled")
-      .select("id")
-      .eq("user_id", studentId)
-      .eq("academic_period_id", periodId)
-      .maybeSingle();
+    const [{ data: profile }, { data: enrolled }] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select("full_name, document_number, gender")
+        .eq("id", studentId)
+        .maybeSingle(),
+      supabase
+        .from("student_enrolled")
+        .select("id")
+        .eq("user_id", studentId)
+        .eq("academic_period_id", periodId)
+        .maybeSingle(),
+    ]);
 
     if (!enrolled) return { error: "El estudiante no está matriculado en este período." };
 
-    const { data: finalGrades, error: fgError } = await supabase
-      .from("student_final_grade")
-      .select("final_grade, group_has_class_id")
-      .eq("student_enrolled_id", enrolled.id)
+    // Ciclos activos del período ordenados por fecha de inicio
+    const { data: cyclesData } = await supabase
+      .from("academic_period_has_cycle")
+      .select("id, start_date, cycles:cycle_id(name)")
       .eq("academic_period_id", periodId)
-      .in("group_has_class_id", classIds);
+      .eq("is_active", true)
+      .order("start_date", { ascending: true });
 
-    if (fgError) return { error: fgError.message };
+    const activeCycles: { id: string; name: string }[] = (cyclesData ?? []).map((c: any) => ({
+      id: c.id,
+      name: c.cycles?.name ?? c.id,
+    }));
+    const activeCycleIds = activeCycles.map((c) => c.id);
 
-    const gradeRows: GradeRow[] = (finalGrades ?? []).map((g: any) => {
-      const cls = classes.find((c) => c.id === g.group_has_class_id);
-      return {
-        subjectName: cls?.subjectName ?? "—",
-        grade: g.final_grade,
-        maxGrade: 120,
-      };
-    }).sort((a, b) => a.subjectName.localeCompare(b.subjectName, "es"));
+    // Notas por ciclo del estudiante
+    const { data: cycleGrades, error: cgError } = await supabase
+      .from("student_cycle_grade")
+      .select("grade, group_has_class_id, academic_period_has_cycle_id")
+      .eq("student_enrolled_id", enrolled.id)
+      .in("group_has_class_id", classIds)
+      .in("academic_period_has_cycle_id", activeCycleIds);
+
+    if (cgError) return { error: cgError.message };
+
+    // Índice rápido: gradeMap[classId][cycleId] = grade
+    const gradeMap: Record<string, Record<string, number>> = {};
+    for (const g of (cycleGrades ?? [])) {
+      if (!gradeMap[g.group_has_class_id]) gradeMap[g.group_has_class_id] = {};
+      gradeMap[g.group_has_class_id][g.academic_period_has_cycle_id] = g.grade;
+    }
+
+    // Construir filas: una por materia, con nota por ciclo y nota final (promedio)
+    const completeRows: CompleteGradeRow[] = classes
+      .map((cls) => {
+        const byClass = gradeMap[cls.id] ?? {};
+        const cycleGradesList = activeCycles.map((c) => byClass[c.id] ?? null);
+        const withGrade = cycleGradesList.filter((g) => g !== null) as number[];
+        const finalGrade = withGrade.length > 0
+          ? Math.round(withGrade.reduce((a, b) => a + b, 0) / withGrade.length)
+          : null;
+        return { subjectName: cls.subjectName, cycleGrades: cycleGradesList, finalGrade };
+      })
+      .sort((a, b) => a.subjectName.localeCompare(b.subjectName, "es"));
 
     const studentName    = (profile as any)?.full_name       ?? "Estudiante";
-    const documentType   = (profile as any)?.document_type   ?? "CC";
     const documentNumber = (profile as any)?.document_number ?? "";
+    const gender2        = (profile as any)?.gender          ?? "M";
 
-    const element = React.createElement(GradesReportPDF, {
+    const element = React.createElement(CompleteStudentReportPDF, {
       ...pdfCommon,
-      cycleName: undefined,
-      studentName, documentType, documentNumber,
-      courseName, gradeLevel: courseName ?? "",
-      grades: gradeRows,
+      studentName, gender: gender2, documentNumber,
+      courseName, cycles: activeCycles,
+      rows: completeRows,
       reportDate: new Date().toISOString(),
     });
 
@@ -942,78 +971,204 @@ async function generateGradesReport(params: GenerateReportParams): Promise<Gener
 
     return {
       base64: buffer.toString("base64"),
-      filename: `calificaciones_final_${slug(studentName)}_${slug(periodName)}.pdf`,
+      filename: `boletin_${slug(studentName)}_${slug(periodName)}.pdf`,
       mimeType: "application/pdf",
     };
   }
 
   // ════════════════════════════════════════════════════════════════════════════
-  // COMPLETO + GRUPO — student_final_grade para todos los estudiantes del grupo
+  // COMPLETO + GRUPO — Excel con notas por ciclo + nota final por estudiante
   // ════════════════════════════════════════════════════════════════════════════
+
+  // 1. Todos los ciclos del período (ordenados por start_date)
+  const { data: cyclesData, error: cyclesError } = await supabase
+    .from("academic_period_has_cycle")
+    .select("id, start_date, cycles:cycle_id(name)")
+    .eq("academic_period_id", periodId)
+    .eq("is_active", true)
+    .order("start_date", { ascending: true });
+
+  if (cyclesError) return { error: cyclesError.message };
+  const cycles: { id: string; name: string }[] = (cyclesData ?? []).map((c: any) => ({
+    id: c.id,
+    name: c.cycles?.name ?? c.id,
+  }));
+
+  // 2. Estudiantes del grupo (incluye id = group_has_students.id para attendance)
   const { data: membersData, error: membersError } = await supabase
     .from("group_has_students")
-    .select("student_enrolled_id, enrollment:student_enrolled_id(user_id, profiles:user_id(full_name, document_number, avatar_url))")
+    .select("id, student_enrolled_id, enrollment:student_enrolled_id(profiles:user_id(full_name, document_number))")
     .eq("group_id", groupId);
 
   if (membersError) return { error: membersError.message };
 
-  const enrolledIds = (membersData ?? []).map((m: any) => m.student_enrolled_id);
+  const enrolledIds      = (membersData ?? []).map((m: any) => m.student_enrolled_id);
+  const groupHasStudIds  = (membersData ?? []).map((m: any) => m.id);
   if (enrolledIds.length === 0) return { error: "El grupo no tiene estudiantes asignados." };
 
-  const { data: finalGrades, error: fgError } = await supabase
-    .from("student_final_grade")
-    .select("final_grade, group_has_class_id, student_enrolled_id")
-    .eq("academic_period_id", periodId)
-    .in("student_enrolled_id", enrolledIds)
-    .in("group_has_class_id", classIds);
+  // Mapa group_has_students.id → student_enrolled.id
+  const ghsToEnrolled: Record<string, string> = {};
+  for (const m of (membersData ?? [])) ghsToEnrolled[(m as any).id] = (m as any).student_enrolled_id;
 
-  if (fgError) return { error: fgError.message };
+  // 3. Notas por ciclo, notas finales y asistencia en paralelo
+  const cycleIds = cycles.map((c) => c.id);
+  const [cycleGradesRes, finalGradesRes, attendanceRes] = await Promise.all([
+    cycleIds.length > 0
+      ? supabase
+          .from("student_cycle_grade")
+          .select("grade, group_has_class_id, student_enrolled_id, academic_period_has_cycle_id")
+          .in("academic_period_has_cycle_id", cycleIds)
+          .in("student_enrolled_id", enrolledIds)
+          .in("group_has_class_id", classIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("student_final_grade")
+      .select("final_grade, group_has_class_id, student_enrolled_id")
+      .eq("academic_period_id", periodId)
+      .in("student_enrolled_id", enrolledIds)
+      .in("group_has_class_id", classIds),
+    groupHasStudIds.length > 0
+      ? supabase
+          .from("student_attendance")
+          .select("status, student_enrolled_id, group_class_has_session:class_session_id(group_has_class_id, academic_period_has_cycle_id)")
+          .in("student_enrolled_id", groupHasStudIds)
+          .eq("status", "absent")
+      : Promise.resolve({ data: [], error: null }),
+  ]);
 
-  // Fetch profile photos in parallel
-  const photoMap: Record<string, string | undefined> = {};
-  await Promise.all(
-    (membersData ?? []).map(async (m: any) => {
-      const avatarUrl = m.enrollment?.profiles?.avatar_url;
-      if (avatarUrl) {
-        photoMap[m.student_enrolled_id] = await fetchAsBase64(avatarUrl).catch(() => undefined);
-      }
-    }),
+  if (cycleGradesRes.error) return { error: cycleGradesRes.error.message };
+  if (finalGradesRes.error) return { error: finalGradesRes.error.message };
+
+  const cycleGrades  = cycleGradesRes.data  ?? [];
+  const finalGradesD = finalGradesRes.data  ?? [];
+
+  // fallaMap[enrolledId][classId][cycleId] = count de ausencias
+  const fallaMap: Record<string, Record<string, Record<string, number>>> = {};
+  for (const att of (attendanceRes.data ?? [])) {
+    const session   = (att as any).group_class_has_session;
+    if (!session) continue;
+    const enrolledId = ghsToEnrolled[(att as any).student_enrolled_id];
+    const classId    = session.group_has_class_id;
+    const cycleId    = session.academic_period_has_cycle_id;
+    if (!enrolledId || !classId || !cycleId) continue;
+    if (!fallaMap[enrolledId]) fallaMap[enrolledId] = {};
+    if (!fallaMap[enrolledId][classId]) fallaMap[enrolledId][classId] = {};
+    fallaMap[enrolledId][classId][cycleId] = (fallaMap[enrolledId][classId][cycleId] ?? 0) + 1;
+  }
+
+  // 4. Subjects ordenadas alfabéticamente
+  const sortedClasses = [...classes].sort((a, b) => a.subjectName.localeCompare(b.subjectName, "es"));
+
+  // 5. Construir el workbook Excel — layout pivotado con Falla + Nota por ciclo
+  const CYCLE_DISPLAY: Record<string, string> = {
+    "1": "Trimestre 1", "2": "Trimestre 2", "3": "Trimestre 3", "4": "Trimestre 4",
+    "I": "Trimestre 1", "II": "Trimestre 2", "III": "Trimestre 3", "IV": "Trimestre 4",
+  };
+  const cycleLabels = cycles.map((c) => CYCLE_DISPLAY[c.name.trim()] ?? c.name);
+
+  const FIXED      = 3;                        // #, Estudiante, Documento
+  const CYCLE_COLS = 2;                        // Falla + Nota por ciclo
+  const SPAN       = cycles.length * CYCLE_COLS + 1; // + N.F.
+
+  // Fila 0 — nombres de materia (merged sobre SPAN cols)
+  const row0: any[] = ["#", "Estudiante", "Documento"];
+  for (const cls of sortedClasses) {
+    row0.push(cls.subjectName.toUpperCase());
+    for (let i = 1; i < SPAN; i++) row0.push(null);
+  }
+
+  // Fila 1 — nombres de ciclo (merged sobre 2 cols: Falla+Nota) + N.F.
+  const row1: any[] = [null, null, null];
+  for (let s = 0; s < sortedClasses.length; s++) {
+    for (const lbl of cycleLabels) { row1.push(lbl); row1.push(null); }
+    row1.push("N.F.");
+  }
+
+  // Fila 2 — Falla / Nota por cada ciclo
+  const row2: any[] = [null, null, null];
+  for (let s = 0; s < sortedClasses.length; s++) {
+    for (let c = 0; c < cycles.length; c++) { row2.push("Falla"); row2.push("Nota"); }
+    row2.push(null);
+  }
+
+  // Estudiantes ordenados
+  const students = [...(membersData ?? [])].sort((a: any, b: any) =>
+    (a.enrollment?.profiles?.full_name ?? "").localeCompare(b.enrollment?.profiles?.full_name ?? "", "es"),
   );
 
-  const subjects = [...classes].sort((a, b) => a.subjectName.localeCompare(b.subjectName, "es")).map((c) => c.subjectName);
-  const maxGrades: Record<string, number> = {};
-  for (const subj of subjects) maxGrades[subj] = 120;
+  // Filas de datos
+  const dataRows: any[][] = students.map((m: any, idx: number) => {
+    const profile  = m.enrollment?.profiles;
+    const name     = profile?.full_name       ?? "—";
+    const docNum   = profile?.document_number ?? "—";
+    const enrollId = m.student_enrolled_id;
 
-  const rows: GroupGradeRow[] = (membersData ?? []).map((m: any) => {
-    const profile = m.enrollment?.profiles;
-    const studentGrades: Record<string, number> = {};
-    for (const g of (finalGrades ?? [])) {
-      if (g.student_enrolled_id !== m.student_enrolled_id) continue;
-      const cls = classes.find((c) => c.id === g.group_has_class_id);
-      if (cls) studentGrades[cls.subjectName] = g.final_grade;
+    const row: any[] = [idx + 1, name, docNum];
+    for (const cls of sortedClasses) {
+      for (const cycle of cycles) {
+        const falla = fallaMap[enrollId]?.[cls.id]?.[cycle.id] ?? 0;
+        const nota  = cycleGrades.find(
+          (g: any) => g.student_enrolled_id === enrollId &&
+                      g.group_has_class_id === cls.id &&
+                      g.academic_period_has_cycle_id === cycle.id,
+        );
+        row.push(falla);
+        row.push(nota ? nota.grade : "");
+      }
+      const nf = finalGradesD.find(
+        (g: any) => g.student_enrolled_id === enrollId && g.group_has_class_id === cls.id,
+      );
+      row.push(nf ? nf.final_grade : "");
     }
-    return {
-      studentName: profile?.full_name ?? "—",
-      documentNumber: profile?.document_number ?? null,
-      grades: studentGrades,
-      photoDataUrl: photoMap[m.student_enrolled_id] ?? null,
-    };
-  }).sort((a, b) => a.studentName.localeCompare(b.studentName, "es"));
-
-  const element = React.createElement(GradesGroupReportPDF, {
-    ...pdfCommon,
-    cycleName: undefined,
-    rows, subjects, maxGrades,
-    reportType: "completo",
+    return row;
   });
 
-  let buffer: Buffer;
-  try { buffer = await renderToBuffer(element as any); }
-  catch (err) { return { error: `Error al generar PDF: ${err instanceof Error ? err.message : "desconocido"}` }; }
+  const wsData = [row0, row1, row2, ...dataRows];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+  // Merges
+  const merges: XLSX.Range[] = [
+    { s: { r: 0, c: 0 }, e: { r: 2, c: 0 } }, // # (3 filas)
+    { s: { r: 0, c: 1 }, e: { r: 2, c: 1 } }, // Estudiante
+    { s: { r: 0, c: 2 }, e: { r: 2, c: 2 } }, // Documento
+  ];
+  sortedClasses.forEach((_, si) => {
+    const subjStart = FIXED + si * SPAN;
+    // Materia (fila 0)
+    merges.push({ s: { r: 0, c: subjStart }, e: { r: 0, c: subjStart + SPAN - 1 } });
+    // Cada ciclo (fila 1): merged Falla+Nota
+    for (let ci = 0; ci < cycles.length; ci++) {
+      const cc = subjStart + ci * CYCLE_COLS;
+      merges.push({ s: { r: 1, c: cc }, e: { r: 1, c: cc + 1 } });
+    }
+    // N.F. (fila 1 + fila 2)
+    const nfCol = subjStart + SPAN - 1;
+    merges.push({ s: { r: 1, c: nfCol }, e: { r: 2, c: nfCol } });
+  });
+  ws["!merges"] = merges;
+
+  // Anchos
+  ws["!cols"] = [
+    { wch: 4 },  // #
+    { wch: 30 }, // Estudiante
+    { wch: 14 }, // Documento
+    ...sortedClasses.flatMap(() => [
+      ...cycles.flatMap(() => [{ wch: 7 }, { wch: 9 }]), // Falla, Nota
+      { wch: 8 }, // N.F.
+    ]),
+  ];
+
+  // Freeze 3 filas de encabezado + 3 columnas fijas
+  ws["!sheetViews"] = [{ state: "frozen", xSplit: FIXED, ySplit: 3 }] as any[];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Calificaciones");
+
+  const xlsxBuffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" }) as Buffer;
 
   return {
-    base64: buffer.toString("base64"),
-    filename: `calificaciones_final_grupo_${slug(groupName)}_${slug(periodName)}.pdf`,
-    mimeType: "application/pdf",
+    base64: Buffer.from(xlsxBuffer).toString("base64"),
+    filename: `calificaciones_completo_${slug(groupName)}_${slug(periodName)}.xlsx`,
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   };
 }

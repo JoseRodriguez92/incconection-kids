@@ -174,12 +174,12 @@ export function RecipientGroupPicker({ onAdd }: RecipientGroupPickerProps) {
       const supabase = createClient();
       const allEmails = new Set<string>();
 
-      // Obtener estudiantes activos del grupo en el período activo
+      // Estudiantes activos del grupo en el período activo
       const { data: ghs } = await supabase
         .from("group_has_students")
         .select(
-          `student_enrolled!group_has_students_student_enrolled_id_fkey (
-            id, user_id, academic_period_id, is_active
+          `student_enrolled!grupo_tiene_estudiante_student_enrolled_id_fkey (
+            user_id, academic_period_id, is_active
           )`
         )
         .eq("group_id", selectedGroupId);
