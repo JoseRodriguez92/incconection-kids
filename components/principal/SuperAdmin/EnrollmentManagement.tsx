@@ -241,232 +241,165 @@ export function EnrollmentManagement() {
 
       {/* Lista de Usuarios para Matricular */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pb-3">
           <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
               <UserPlus className="w-5 h-5" />
               <span>Usuarios Disponibles</span>
             </div>
             <span className="text-sm font-normal text-muted-foreground">
-              Total: {profiles.length}
+              {profiles.length} {profiles.length === 1 ? "usuario" : "usuarios"}
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {/* Campo de Búsqueda */}
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Buscar por nombre, email o teléfono..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            {searchTerm && (
-              <p className="text-sm text-muted-foreground mt-2">
-                Mostrando {filteredProfiles.length} de {profiles.length}{" "}
-                usuarios
-              </p>
-            )}
+        <CardContent className="space-y-4">
+
+          {/* Búsqueda */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Buscar por nombre, email o teléfono..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
 
-          {/* Loading State */}
+          {/* Loading */}
           {loadingProfiles && (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary" />
-              <span className="ml-3 text-muted-foreground">
-                Cargando usuarios...
-              </span>
+            <div className="flex items-center justify-center py-12 gap-3 text-muted-foreground">
+              <Loader2 className="w-6 h-6 animate-spin text-primary" />
+              <span className="text-sm">Cargando usuarios...</span>
             </div>
           )}
 
-          {/* Error State */}
+          {/* Error */}
           {errorProfiles && (
-            <div className="flex items-center justify-center py-12 text-destructive">
-              <AlertCircle className="w-8 h-8 mr-3" />
+            <div className="flex items-center justify-center py-10 gap-3 text-destructive">
+              <AlertCircle className="w-6 h-6 shrink-0" />
               <div>
-                <p className="font-semibold">Error al cargar datos</p>
-                <p className="text-sm">{errorProfiles}</p>
+                <p className="font-semibold text-sm">Error al cargar datos</p>
+                <p className="text-xs">{errorProfiles}</p>
               </div>
             </div>
           )}
 
-          {/* Data Display */}
+          {/* Datos */}
           {!loadingProfiles && !errorProfiles && (
-            <div className="space-y-4">
-              {filteredProfiles.length > 0 ? (
-                <>
-                  <div className="border rounded-lg overflow-hidden">
-                    <table className="w-full">
-                      <thead className="bg-muted">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-sm font-semibold">
-                            Avatar
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold">
-                            Nombre Completo
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold">
-                            Email
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold">
-                            Teléfono
-                          </th>
-                          <th className="px-4 py-3 text-left text-sm font-semibold">
-                            Acciones
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {currentProfiles.map((profile) => (
-                          <tr
-                            key={profile.id}
-                            className="border-t hover:bg-muted/50 transition-colors"
-                          >
-                            <td className="px-4 py-3">
-                              {profile.avatar_url ? (
-                                <img
-                                  src={profile.avatar_url}
-                                  alt={profile.full_name || "Usuario"}
-                                  className="w-10 h-10 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
-                                  <User className="w-5 h-5 text-muted-foreground" />
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-4 py-3 text-sm font-medium">
-                              {profile.full_name || "Sin nombre"}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-muted-foreground">
-                              {profile.email || "Sin email"}
-                            </td>
-                            <td className="px-4 py-3 text-sm text-muted-foreground">
-                              {profile.phone || "Sin teléfono"}
-                            </td>
-                            <td className="px-4 py-3">
-                              <Button
-                                size="sm"
-                                variant="default"
-                                onClick={() => handleEnroll(profile)}
-                                className="flex items-center gap-2"
-                              >
-                                <UserPlus className="w-4 h-4" />
-                                Matricular
-                              </Button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Controles de Paginación */}
-                  {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-2">
-                      <div className="text-sm text-muted-foreground">
-                        Mostrando {startIndex + 1} a{" "}
-                        {Math.min(endIndex, filteredProfiles.length)} de{" "}
-                        {filteredProfiles.length} usuarios
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={goToPreviousPage}
-                          disabled={currentPage === 1}
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                          Anterior
-                        </Button>
-
-                        <div className="flex items-center gap-1">
-                          {Array.from(
-                            { length: totalPages },
-                            (_, i) => i + 1,
-                          ).map((page) => {
-                            // Mostrar solo algunas páginas
-                            if (
-                              page === 1 ||
-                              page === totalPages ||
-                              (page >= currentPage - 1 &&
-                                page <= currentPage + 1)
-                            ) {
-                              return (
-                                <Button
-                                  key={page}
-                                  variant={
-                                    currentPage === page ? "default" : "outline"
-                                  }
-                                  size="sm"
-                                  onClick={() => goToPage(page)}
-                                  className="min-w-[2.5rem]"
-                                >
-                                  {page}
-                                </Button>
-                              );
-                            } else if (
-                              page === currentPage - 2 ||
-                              page === currentPage + 2
-                            ) {
-                              return (
-                                <span
-                                  key={page}
-                                  className="px-2 text-muted-foreground"
-                                >
-                                  ...
-                                </span>
-                              );
-                            }
-                            return null;
-                          })}
+            filteredProfiles.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <User className="w-12 h-12 mx-auto mb-3 opacity-40" />
+                {searchTerm ? (
+                  <>
+                    <p className="text-sm font-medium">Sin resultados para "{searchTerm}"</p>
+                    <Button variant="link" size="sm" onClick={() => setSearchTerm("")} className="mt-1">
+                      Limpiar búsqueda
+                    </Button>
+                  </>
+                ) : (
+                  <p className="text-sm">No hay usuarios disponibles</p>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* ── Mobile: tarjetas ── */}
+                <div className="flex flex-col gap-2 sm:hidden">
+                  {currentProfiles.map((profile) => (
+                    <div key={profile.id} className="flex items-center gap-3 p-3 rounded-xl border bg-background">
+                      {profile.avatar_url ? (
+                        <img src={profile.avatar_url} alt={profile.full_name || "Usuario"}
+                          className="w-10 h-10 rounded-full object-cover shrink-0" />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <User className="w-4 h-4 text-muted-foreground" />
                         </div>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={goToNextPage}
-                          disabled={currentPage === totalPages}
-                        >
-                          Siguiente
-                          <ChevronRight className="w-4 h-4" />
-                        </Button>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{profile.full_name || "Sin nombre"}</p>
+                        <p className="text-xs text-muted-foreground truncate">{profile.email || "Sin email"}</p>
                       </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  <User className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  {searchTerm ? (
-                    <>
-                      <p className="text-lg">No se encontraron resultados</p>
-                      <p className="text-sm mt-2">
-                        No hay usuarios que coincidan con "{searchTerm}"
-                      </p>
-                      <Button
-                        variant="link"
-                        onClick={() => setSearchTerm("")}
-                        className="mt-3"
-                      >
-                        Limpiar búsqueda
+                      <Button size="sm" variant="default" onClick={() => handleEnroll(profile)}
+                        className="shrink-0 h-8 px-3 gap-1.5">
+                        <UserPlus className="w-3.5 h-3.5" />
+                        <span className="text-xs">Matricular</span>
                       </Button>
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-lg">No hay usuarios disponibles</p>
-                      <p className="text-sm mt-2">
-                        Los usuarios registrados aparecerán aquí
-                      </p>
-                    </>
-                  )}
+                    </div>
+                  ))}
                 </div>
-              )}
-            </div>
+
+                {/* ── Desktop: tabla ── */}
+                <div className="hidden sm:block border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-muted">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Avatar</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Nombre</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Teléfono</th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {currentProfiles.map((profile) => (
+                        <tr key={profile.id} className="border-t hover:bg-muted/50 transition-colors">
+                          <td className="px-4 py-3">
+                            {profile.avatar_url ? (
+                              <img src={profile.avatar_url} alt={profile.full_name || "Usuario"}
+                                className="w-9 h-9 rounded-full object-cover" />
+                            ) : (
+                              <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+                                <User className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 text-sm font-medium">{profile.full_name || "Sin nombre"}</td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">{profile.email || "—"}</td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">{profile.phone || "—"}</td>
+                          <td className="px-4 py-3">
+                            <Button size="sm" onClick={() => handleEnroll(profile)} className="gap-1.5">
+                              <UserPlus className="w-4 h-4" />
+                              Matricular
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Paginación */}
+                {totalPages > 1 && (
+                  <div className="flex flex-col items-center gap-2 pt-1 sm:flex-row sm:justify-between">
+                    <p className="text-xs text-muted-foreground order-2 sm:order-1">
+                      Mostrando <strong>{startIndex + 1}–{Math.min(endIndex, filteredProfiles.length)}</strong> de <strong>{filteredProfiles.length}</strong> usuarios
+                    </p>
+                    <div className="flex items-center gap-1 order-1 sm:order-2">
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+                        onClick={goToPreviousPage} disabled={currentPage === 1}>
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        const near = page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1);
+                        const ellipsis = page === currentPage - 2 || page === currentPage + 2;
+                        if (near) return (
+                          <Button key={page} variant={currentPage === page ? "default" : "outline"}
+                            size="sm" className="h-8 w-8 p-0 text-xs" onClick={() => goToPage(page)}>
+                            {page}
+                          </Button>
+                        );
+                        if (ellipsis) return <span key={page} className="text-xs text-muted-foreground px-0.5">…</span>;
+                        return null;
+                      })}
+                      <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+                        onClick={goToNextPage} disabled={currentPage === totalPages}>
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )
           )}
         </CardContent>
       </Card>

@@ -62,7 +62,7 @@ export function CaseFormDialog({
 }: CaseFormDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {editingCase ? "Editar Caso Psicológico" : "Crear Nuevo Caso Psicológico"}
@@ -173,7 +173,7 @@ export function CaseFormDialog({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Estado */}
             <div className="space-y-2">
               <Label htmlFor="status">Estado *</Label>

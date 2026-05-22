@@ -12,10 +12,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetClose } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import {
   Calendar as CalendarIcon,
+  List,
   Plus,
   Edit,
   Trash2,
@@ -23,6 +24,7 @@ import {
   Clock,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { categoriaEventos } from "./data";
 import {
@@ -32,6 +34,7 @@ import {
   type EventUpdate,
 } from "@/Stores/eventStore";
 import { InstituteStore } from "@/Stores/InstituteStore";
+import { UserInfoStore } from "@/Stores/UserInfoStore";
 import { PeriodAcademicStore } from "@/Stores/periodAcademicStore";
 import { ClassroomsStore } from "@/Stores/ClassroomsStore";
 import { toast } from "sonner";
@@ -58,10 +61,12 @@ export default function EventsManagement() {
     fetchEventsByPeriod,
   } = EventStore();
   const { institute } = InstituteStore();
+  const currentRole = UserInfoStore((s) => s.current_role);
   const { fetchActivePeriodo, periodos, fetchPeriodos } = PeriodAcademicStore();
   const { classrooms, fetchClassrooms } = ClassroomsStore();
 
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
+  const [viewMode, setViewMode] = useState<"calendar" | "list">("list");
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -337,6 +342,13 @@ export default function EventsManagement() {
     }
   };
 
+  // Desktop arranca en calendario
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 640px)").matches) {
+      setViewMode("calendar");
+    }
+  }, []);
+
   const monthName = currentDate.toLocaleDateString("es-ES", {
     month: "long",
     year: "numeric",
@@ -345,20 +357,46 @@ export default function EventsManagement() {
   const days = getDaysInMonth(currentDate);
   const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
+  // Eventos del mes actual agrupados por día para la vista lista
+  const monthEvents = events
+    .filter((e) => {
+      const d = new Date(e.start_at);
+      return (
+        d.getMonth() === currentDate.getMonth() &&
+        d.getFullYear() === currentDate.getFullYear()
+      );
+    })
+    .sort(
+      (a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime(),
+    );
+
+  const eventsByDay = monthEvents.reduce<Record<string, Event[]>>(
+    (acc, event) => {
+      const key = event.start_at.split("T")[0];
+      (acc[key] = acc[key] || []).push(event);
+      return acc;
+    },
+    {},
+  );
+
+  const dayKeys = Object.keys(eventsByDay).sort();
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative z-1">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-2xl font-bold text-foreground leading-tight">
           Gestión de Eventos
         </h2>
         <Dialog open={isCreateEventOpen} onOpenChange={setIsCreateEventOpen}>
-          <DialogTrigger asChild>
-            <Button className="flex items-center space-x-2">
-              <Plus className="w-4 h-4" />
-              <span>Nuevo Evento</span>
-            </Button>
-          </DialogTrigger>
+          {currentRole !== "enfermeria" && (
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2 sm:shrink-0">
+                <Plus className="w-4 h-4" />
+                <span>Nuevo Evento</span>
+              </Button>
+            </DialogTrigger>
+          )}
           <DialogContent className="sm:max-w-2xl">
             <DialogHeader>
               <DialogTitle>Crear Nuevo Evento</DialogTitle>
@@ -503,15 +541,37 @@ export default function EventsManagement() {
         </Dialog>
       </div>
 
-      {/* Calendar */}
+      {/* Calendario / Lista */}
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <CalendarIcon className="w-5 h-5" />
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center justify-between gap-2 flex-wrap">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="w-5 h-5 shrink-0" />
               <span className="capitalize">{monthName}</span>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
+              {/* Toggle de vista */}
+              <div className="flex items-center rounded-lg border p-0.5 gap-0.5">
+                <Button
+                  variant={viewMode === "calendar" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setViewMode("calendar")}
+                  title="Vista calendario"
+                >
+                  <CalendarIcon className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => setViewMode("list")}
+                  title="Vista lista"
+                >
+                  <List className="w-3.5 h-3.5" />
+                </Button>
+              </div>
+              {/* Navegación de mes */}
               <Button
                 variant="outline"
                 size="icon"
@@ -525,78 +585,153 @@ export default function EventsManagement() {
             </div>
           </CardTitle>
         </CardHeader>
+
         <CardContent>
-          <div className="grid grid-cols-7 gap-2">
-            {/* Encabezados de días */}
-            {weekDays.map((day) => (
-              <div
-                key={day}
-                className="text-center font-semibold text-sm py-2 text-muted-foreground"
-              >
-                {day}
-              </div>
-            ))}
-
-            {/* Días del calendario */}
-            {days.map((day, index) => {
-              const dayEvents = getEventsForDay(day);
-              const isToday =
-                day &&
-                day.getDate() === new Date().getDate() &&
-                day.getMonth() === new Date().getMonth() &&
-                day.getFullYear() === new Date().getFullYear();
-
-              return (
+          {/* ── Vista Calendario ── */}
+          {viewMode === "calendar" && (
+            <div className="grid grid-cols-7 gap-2">
+              {weekDays.map((day) => (
                 <div
-                  key={index}
-                  className={`min-h-[120px] border rounded-lg p-2 ${
-                    day ? "bg-card" : "bg-muted/30"
-                  } ${isToday ? "ring-2 ring-primary" : ""}`}
+                  key={day}
+                  className="text-center font-semibold text-sm py-2 text-muted-foreground"
                 >
-                  {day && (
-                    <>
-                      <div
-                        className={`text-sm font-medium mb-1 ${
-                          isToday ? "text-primary" : "text-foreground"
-                        }`}
-                      >
-                        {day.getDate()}
+                  {day}
+                </div>
+              ))}
+              {days.map((day, index) => {
+                const dayEvents = getEventsForDay(day);
+                const isToday =
+                  day &&
+                  day.getDate() === new Date().getDate() &&
+                  day.getMonth() === new Date().getMonth() &&
+                  day.getFullYear() === new Date().getFullYear();
+                return (
+                  <div
+                    key={index}
+                    className={`min-h-[120px] border rounded-lg p-2 ${
+                      day ? "bg-card" : "bg-muted/30"
+                    } ${isToday ? "ring-2 ring-primary" : ""}`}
+                  >
+                    {day && (
+                      <>
+                        <div
+                          className={`text-sm font-medium mb-1 ${isToday ? "text-primary" : "text-foreground"}`}
+                        >
+                          {day.getDate()}
+                        </div>
+                        <div className="space-y-1">
+                          {dayEvents.slice(0, 2).map((event) => (
+                            <div
+                              key={event.id}
+                              onClick={() => handleEventClick(event)}
+                              className={`${getCategoryColor(event.category || undefined)} text-white text-xs p-1 rounded cursor-pointer hover:opacity-80 transition-opacity truncate`}
+                              title={event.title}
+                            >
+                              {event.title}
+                            </div>
+                          ))}
+                          {dayEvents.length > 2 && (
+                            <div className="text-xs text-muted-foreground">
+                              +{dayEvents.length - 2} más
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* ── Vista Lista ── */}
+          {viewMode === "list" &&
+            (dayKeys.length === 0 ? (
+              <div className="text-center py-14 text-muted-foreground">
+                <CalendarIcon className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                <p className="text-sm font-medium">Sin eventos este mes</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {dayKeys.map((dayKey) => {
+                  const dayDate = new Date(`${dayKey}T12:00:00`);
+                  const dayEventsForKey = eventsByDay[dayKey];
+                  const todayKey = new Date().toISOString().split("T")[0];
+                  const isToday = dayKey === todayKey;
+
+                  return (
+                    <div key={dayKey}>
+                      {/* Encabezado de día */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${isToday ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
+                        >
+                          {dayDate.getDate()}
+                        </div>
+                        <span
+                          className={`text-xs font-semibold capitalize ${isToday ? "text-primary" : "text-muted-foreground"}`}
+                        >
+                          {dayDate.toLocaleDateString("es-ES", {
+                            weekday: "long",
+                            month: "long",
+                          })}
+                        </span>
+                        <div className="flex-1 h-px bg-border" />
                       </div>
-                      <div className="space-y-1">
-                        {dayEvents.slice(0, 2).map((event) => (
+
+                      {/* Tarjetas de eventos del día */}
+                      <div className="space-y-2 ml-10">
+                        {dayEventsForKey.map((event) => (
                           <div
                             key={event.id}
                             onClick={() => handleEventClick(event)}
-                            className={`${getCategoryColor(
-                              event.category || undefined,
-                            )} text-white text-xs p-1 rounded cursor-pointer hover:opacity-80 transition-opacity truncate`}
-                            title={event.title}
+                            className="flex items-stretch gap-3 p-3 rounded-xl border bg-card cursor-pointer hover:shadow-md transition-shadow"
                           >
-                            {event.title}
+                            {/* Barra de color de categoría */}
+                            <div
+                              className={`w-1 rounded-full shrink-0 ${getCategoryColor(event.category || undefined)}`}
+                            />
+                            <div className="flex-1 min-w-0 space-y-1">
+                              <p className="text-sm font-semibold leading-tight truncate">
+                                {event.title}
+                              </p>
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Clock className="w-3 h-3 shrink-0" />
+                                <span>
+                                  {formatTime(event.start_at)} –{" "}
+                                  {formatTime(event.end_at)}
+                                </span>
+                              </div>
+                              {event.category && (
+                                <Badge
+                                  className={`text-[10px] px-1.5 py-0 h-4 ${getCategoryColor(event.category)} text-white`}
+                                >
+                                  {event.category}
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                         ))}
-                        {dayEvents.length > 2 && (
-                          <div className="text-xs text-muted-foreground">
-                            +{dayEvents.length - 2} más
-                          </div>
-                        )}
                       </div>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
         </CardContent>
       </Card>
 
       {/* Side Panel */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-        <SheetContent className="w-[400px] sm:w-[540px] overflow-y-auto p-0">
+        <SheetContent className="w-full sm:w-[400px] md:w-[540px] p-0 flex flex-col">
           {selectedEvent && (
-            <div className="h-full flex flex-col">
+            <>
               {/* Imagen con título superpuesto */}
-              <div className="relative h-48 w-full bg-gradient-to-br from-primary/20 to-primary/5">
+              <div className="relative h-44 sm:h-52 w-full shrink-0 bg-gradient-to-br from-primary/20 to-primary/5">
+                {/* Botón cerrar */}
+                <SheetClose className="absolute top-3 right-3 z-20 rounded-full bg-black/40 hover:bg-black/60 p-1.5 text-white transition-colors">
+                  <X className="w-4 h-4" />
+                </SheetClose>
                 <img
                   src={
                     selectedEvent.image_url ||
@@ -606,34 +741,34 @@ export default function EventsManagement() {
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-5">
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
                   <Badge
-                    className={`${getCategoryColor(selectedEvent.category || undefined)} text-white mb-2`}
+                    className={`${getCategoryColor(selectedEvent.category || undefined)} text-white mb-1.5`}
                   >
                     {selectedEvent.category}
                   </Badge>
-                  <h3 className="text-2xl font-bold text-white drop-shadow-lg">
+                  <h3 className="text-xl sm:text-2xl font-bold text-white drop-shadow-lg leading-tight line-clamp-2">
                     {selectedEvent.title}
                   </h3>
                 </div>
               </div>
 
-              {/* Contenido */}
-              <div className="flex-1 px-5 py-4 space-y-4">
+              {/* Contenido — ocupa el espacio restante y hace scroll si es necesario */}
+              <div className="flex-1 overflow-y-auto px-4 sm:px-5 py-4 space-y-4">
                 {/* Descripción */}
                 {selectedEvent.description && (
                   <div className="pb-3 border-b">
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       {selectedEvent.description}
                     </p>
                   </div>
                 )}
 
-                {/* Información en Grid */}
-                <div className="grid grid-cols-2 gap-3">
+                {/* Información */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   {/* Fecha inicio */}
-                  <div className="flex items-start space-x-2 p-3 rounded-lg bg-muted/50">
-                    <CalendarIcon className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
+                    <CalendarIcon className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Inicio</p>
                       <p className="text-sm font-medium truncate">
@@ -643,8 +778,8 @@ export default function EventsManagement() {
                   </div>
 
                   {/* Fecha fin */}
-                  <div className="flex items-start space-x-2 p-3 rounded-lg bg-muted/50">
-                    <CalendarIcon className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50">
+                    <CalendarIcon className="w-4 h-4 text-red-600 mt-0.5 shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Fin</p>
                       <p className="text-sm font-medium truncate">
@@ -654,12 +789,12 @@ export default function EventsManagement() {
                   </div>
 
                   {/* Horario */}
-                  <div className="flex items-start space-x-2 p-3 rounded-lg bg-muted/50 col-span-2">
-                    <Clock className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 col-span-2">
+                    <Clock className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
                     <div className="min-w-0">
                       <p className="text-xs text-muted-foreground">Horario</p>
-                      <p className="text-sm font-medium">
-                        {formatTime(selectedEvent.start_at)} -{" "}
+                      <p className="text-sm font-medium tabular-nums">
+                        {formatTime(selectedEvent.start_at)} –{" "}
                         {formatTime(selectedEvent.end_at)}
                       </p>
                     </div>
@@ -667,8 +802,8 @@ export default function EventsManagement() {
 
                   {/* Aula */}
                   {selectedEvent.classroom_id && (
-                    <div className="flex items-start space-x-2 p-3 rounded-lg bg-muted/50 col-span-2">
-                      <MapPin className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+                    <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 col-span-2">
+                      <MapPin className="w-4 h-4 text-purple-600 mt-0.5 shrink-0" />
                       <div className="min-w-0">
                         <p className="text-xs text-muted-foreground">Aula</p>
                         <p className="text-sm font-medium">
@@ -682,29 +817,31 @@ export default function EventsManagement() {
                 </div>
               </div>
 
-              {/* Acciones fijas en el fondo */}
-              <div className="border-t p-4 bg-background">
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1"
-                    onClick={handleOpenEditModal}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    Editar
-                  </Button>
-                  <Button
-                    variant="destructive"
-                    className="flex-1"
-                    onClick={handleDeleteEvent}
-                    disabled={loading}
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    {loading ? "Eliminando..." : "Eliminar"}
-                  </Button>
+              {/* Acciones — ocultas para rol enfermeria */}
+              {currentRole !== "enfermeria" && (
+                <div className="border-t px-4 sm:px-5 py-4 bg-background shrink-0">
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 gap-2"
+                      onClick={handleOpenEditModal}
+                    >
+                      <Edit className="w-4 h-4 shrink-0" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="flex-1 gap-2"
+                      onClick={handleDeleteEvent}
+                      disabled={loading}
+                    >
+                      <Trash2 className="w-4 h-4 shrink-0" />
+                      {loading ? "Eliminando..." : "Eliminar"}
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </div>
+              )}
+            </>
           )}
         </SheetContent>
       </Sheet>

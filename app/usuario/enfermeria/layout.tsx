@@ -13,7 +13,8 @@ import {
   Stethoscope,
   ClipboardList,
   UserCircle,
-  Bell,
+  Calendar,
+  HelpCircle,
   Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -67,15 +68,28 @@ const enfermeriaMenu: MenuCategory[] = [
     ],
   },
   {
-    id: "notificaciones",
-    label: "Notificaciones",
-    icon: Bell,
+    id: "eventos",
+    label: "Eventos",
+    icon: Calendar,
     items: [
       {
-        id: "notificaciones",
-        label: "Notificaciones",
-        icon: Bell,
-        href: "/usuario/enfermeria/notificaciones",
+        id: "eventos",
+        label: "Eventos",
+        icon: Calendar,
+        href: "/usuario/enfermeria/eventos",
+      },
+    ],
+  },
+  {
+    id: "soporte",
+    label: "Soporte",
+    icon: HelpCircle,
+    items: [
+      {
+        id: "soporte",
+        label: "Soporte",
+        icon: HelpCircle,
+        href: "/usuario/enfermeria/soporte",
       },
     ],
   },

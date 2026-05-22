@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Sidebar } from "../../../components/principal/SuperAdmin/Sidebar";
@@ -28,6 +29,7 @@ import { CycleManagement } from "@/components/principal/SuperAdmin/cycleManageme
 import CircularesManagement from "@/components/principal/SuperAdmin/CircularesManagement";
 import { LearningConditionManagement } from "@/components/principal/SuperAdmin/LearningConditionManagement";
 import { ResultadosManagement } from "@/components/principal/SuperAdmin/ResultadosManagement";
+import NursingManagement from "@/components/principal/SuperAdmin/NursingManagement";
 
 export default function Page() {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -92,6 +94,8 @@ export default function Page() {
         return <ReportsManagement />;
       case "carnetizacion":
         return <CarnetManagement />;
+      case "enfermeria":
+        return <NursingManagement />;
       case "condiciones-aprendizaje":
         return <LearningConditionManagement />;
       case "resultados":
@@ -124,7 +128,19 @@ export default function Page() {
       <div className="flex-1 flex flex-col overflow-hidden w-[full]">
         {/* Header móvil */}
         <header className="lg:hidden bg-card border-b border-border p-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-foreground">Admin Panel</h1>
+          {instituteInfo?.logo_url ? (
+            <Image
+              src={instituteInfo.logo_url}
+              alt={instituteInfo.name}
+              width={140}
+              height={40}
+              className="h-9 w-auto object-contain"
+            />
+          ) : (
+            <span className="text-xl font-semibold text-foreground truncate">
+              {instituteInfo?.name || "Admin Panel"}
+            </span>
+          )}
           <Button
             variant="ghost"
             size="sm"

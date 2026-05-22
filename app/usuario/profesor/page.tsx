@@ -278,33 +278,30 @@ export default function Profesor() {
   }, []);
 
   return (
-    <div className="min-w-0 space-y-6 p-6 w-full">
+    <div className="min-w-0 space-y-6 p-4 sm:p-6 w-full">
       {/* Header de bienvenida */}
       <div id="tour-bienvenida" className="space-y-2 relative z-1">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold tracking-tight leading-tight">
               ¡Bienvenido, Profesor
               {userData?.first_name ? ` ${userData.first_name}` : ""}!
             </h1>
-            <div className="flex items-center gap-3 mt-1">
-              <p className="text-muted-foreground capitalize">{today}</p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+              <p className="text-muted-foreground capitalize text-sm sm:text-base">{today}</p>
               {periodoActivo && (
-                <>
-                  <span className="text-muted-foreground">•</span>
-                  <Badge
-                    id="tour-periodo"
-                    className="text-sm bg-green-600 hover:bg-green-700 text-white cursor-default"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-100"></span>
-                      </span>
-                      📅 {periodoActivo.name}
+                <Badge
+                  id="tour-periodo"
+                  className="text-xs sm:text-sm bg-green-600 hover:bg-green-700 text-white cursor-default"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-100"></span>
                     </span>
-                  </Badge>
-                </>
+                    📅 {periodoActivo.name}
+                  </span>
+                </Badge>
               )}
             </div>
           </div>
@@ -318,7 +315,7 @@ export default function Profesor() {
             onClick={startTour}
           >
             <HelpCircle className="w-4 h-4" />
-            Tour del panel
+            <span className="hidden sm:inline">Tour del panel</span>
           </Button>
         </div>
       </div>
@@ -523,14 +520,14 @@ export default function Profesor() {
                   <button
                     key={f.key}
                     onClick={() => setActFilter(f.key)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md font-medium transition-all ${
+                    className={`flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-xs rounded-md font-medium transition-all ${
                       actFilter === f.key
                         ? f.activeClass
                         : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {f.icon}
-                    {f.label}
+                    <span className="hidden sm:inline">{f.label}</span>
                     <span
                       className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
                         actFilter === f.key
@@ -660,12 +657,12 @@ export default function Profesor() {
                             </Badge>
                           )}
                           {isOverdue && (
-                            <Badge className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300">
+                            <Badge className="text-[10px] px-1.5 py-0 bg-red-100 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 hidden sm:inline-flex">
                               Vencida
                             </Badge>
                           )}
                           {isUrgent && !isOverdue && (
-                            <Badge className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300">
+                            <Badge className="text-[10px] px-1.5 py-0 bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 hidden sm:inline-flex">
                               Urgente
                             </Badge>
                           )}

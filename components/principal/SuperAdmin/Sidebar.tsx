@@ -68,14 +68,12 @@ const defaultMenuCategories: MenuCategory[] = [
   {
     id: "estructura", label: "Estructura", icon: Building2,
     items: [
-      { icon: Building2, label: "Edificio", href: "/edificios", id: "edificios" },
       { icon: DoorOpen,  label: "Aula",     href: "/aulas",     id: "aulas"     },
     ],
   },
   {
     id: "servicios", label: "Servicios", icon: Sparkles,
     items: [
-      { icon: Route,         label: "Ruta",               href: "/rutas",                    id: "rutas"                    },
       { icon: Brain,         label: "Psicología",         href: "/psicologia",               id: "psicologia"               },
       { icon: Cross,         label: "Enfermería",         href: "/enfermeria",               id: "enfermeria"               },
       { icon: HeartHandshake, label: "Cond. Aprendizaje", href: "/condiciones-aprendizaje",  id: "condiciones-aprendizaje"  },

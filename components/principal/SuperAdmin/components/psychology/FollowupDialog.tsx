@@ -45,7 +45,7 @@ export function FollowupDialog({
 }: FollowupDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingFollowup ? "Editar Seguimiento" : "Nuevo Seguimiento"}</DialogTitle>
           <DialogDescription>
@@ -65,7 +65,7 @@ export function FollowupDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="followup-status">Estado</Label>
               <Select

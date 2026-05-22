@@ -82,7 +82,7 @@ function StickyHeaderCells({
         )}
       </th>
       <th
-        className={`sticky z-20 border-r border-border ${borderB} whitespace-nowrap`}
+        className={`sm:sticky z-20 border-r border-border ${borderB} whitespace-nowrap`}
         style={{
           left: COL.cond.left,
           minWidth: COL.cond.minWidth,
@@ -235,7 +235,7 @@ export function GradeTable({ group, groupIdx, onViewGrades, onGradeEdit, onFinal
   };
 
   return (
-    <div className="mt-2 rounded-xl border border-border bg-white/70 overflow-hidden">
+    <div className="mt-2 rounded-xl border border-border bg-white/70 overflow-hidden max-w-full">
       {/* ── Filtro de materias ── */}
       {allSubjects.length > 1 && (
         <div className="px-4 py-2.5 border-b border-border flex items-center gap-3">
@@ -313,7 +313,11 @@ export function GradeTable({ group, groupIdx, onViewGrades, onGradeEdit, onFinal
 
       {/* ── Tabla ── */}
       {!noneSelected && (
-        <div className="overflow-x-auto">
+        <>
+          <p className="text-xs text-muted-foreground py-1.5 text-center sm:hidden select-none">
+            ← Desliza para ver las notas →
+          </p>
+          <div className="overflow-x-auto">
           {/*
           border-separate + border-spacing-0:
           Necesario para que z-index funcione correctamente en celdas sticky.
@@ -482,7 +486,7 @@ export function GradeTable({ group, groupIdx, onViewGrades, onGradeEdit, onFinal
 
                     {/* Condición de aprendizaje */}
                     <td
-                      className={`sticky z-10 px-3 py-2 border-r border-border${bB}`}
+                      className={`sm:sticky z-10 px-3 py-2 border-r border-border${bB}`}
                       style={{
                         left: COL.cond.left,
                         minWidth: COL.cond.minWidth,
@@ -649,6 +653,7 @@ export function GradeTable({ group, groupIdx, onViewGrades, onGradeEdit, onFinal
             </tbody>
           </table>
         </div>
+      </>
       )}
     </div>
   );

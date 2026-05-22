@@ -31,7 +31,7 @@ export function ResultadosFilters({
   totalStudents,
 }: Props) {
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
       {/* Período activo — solo informativo */}
       {activePeriod && (
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 text-sm font-medium shrink-0">
@@ -45,7 +45,7 @@ export function ResultadosFilters({
         value={selectedCourseId ?? ""}
         onValueChange={(v) => onCourseChange(v || null)}
       >
-        <SelectTrigger className="w-56">
+        <SelectTrigger className="w-full sm:w-56">
           <div className="flex items-center gap-2">
             <BookOpen className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
             <SelectValue placeholder="Seleccionar curso" />

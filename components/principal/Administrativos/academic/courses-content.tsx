@@ -427,7 +427,7 @@ export function CoursesContent() {
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Gestión de Cursos
+            Gestión de Cursos hh
           </h1>
           <p className="text-muted-foreground">
             Administra los cursos y materias del instituto

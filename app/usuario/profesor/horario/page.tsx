@@ -20,7 +20,14 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Clock, Calendar, Users, BookOpen, MapPin, HelpCircle } from "lucide-react";
+import {
+  Clock,
+  Calendar,
+  Users,
+  BookOpen,
+  MapPin,
+  HelpCircle,
+} from "lucide-react";
 import { GroupHasClassStore } from "@/Stores/GroupHasClassStore";
 import { GroupClassScheduleStore } from "@/Stores/GroupClassScheduleStore";
 import { TeacherEnrrolledStore } from "@/Stores/teacherEnrolledStore";
@@ -546,7 +553,8 @@ export default function SchedulesManagement() {
       element: "#tour-horario-boton",
       popover: {
         title: "❓ Tour de ayuda",
-        description: "Puedes relanzar este recorrido en cualquier momento haciendo clic aquí.",
+        description:
+          "Puedes relanzar este recorrido en cualquier momento haciendo clic aquí.",
         side: "bottom",
         align: "end",
       },
@@ -588,29 +596,30 @@ export default function SchedulesManagement() {
 
   return (
     <div className="space-y-6 p-4 md:p-8 min-w-0 w-full pb-20">
-      <div id="tour-horario-header" className="space-y-2 relative z-1">
-        <div className="flex items-start justify-between gap-4">
+      {/* ── Header ─────────────────────────────────────────────────────── */}
+      <div id="tour-horario-header" className="relative z-1">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">
-              Gestión de Horarios
+            <h2 className="text-2xl font-bold text-foreground leading-tight">
+              Gestión de Horarios hh
             </h2>
-            <div className="flex items-center gap-3 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <p className="text-sm text-muted-foreground">
                 Horarios de tus clases del período actual
               </p>
               {activePeriod && (
-                <>
-                  <span className="text-muted-foreground">•</span>
-                  <Badge id="tour-horario-periodo" className="text-sm bg-green-600 hover:bg-green-700 text-white cursor-default">
-                    <span className="flex items-center gap-2">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-100"></span>
-                      </span>
-                      📅 {activePeriod.name}
+                <Badge
+                  id="tour-horario-periodo"
+                  className="text-xs bg-green-600 hover:bg-green-700 text-white cursor-default"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-100" />
                     </span>
-                  </Badge>
-                </>
+                    📅 {activePeriod.name}
+                  </span>
+                </Badge>
               )}
             </div>
           </div>
@@ -619,53 +628,58 @@ export default function SchedulesManagement() {
             id="tour-horario-boton"
             variant="outline"
             size="sm"
-            className="gap-2 shrink-0"
+            className="gap-2 shrink-0 self-start"
             onClick={startTour}
           >
             <HelpCircle className="w-4 h-4" />
-            Tour de la sección
+            <span className="hidden sm:inline">Tour de la sección</span>
+            <span className="sm:hidden">Tour</span>
           </Button>
         </div>
       </div>
 
-      {/* Botones para cambiar vista */}
+      {/* ── Selector de vista ──────────────────────────────────────────── */}
       <Card id="tour-horario-vista">
-        <CardContent className="py-4">
+        <CardContent className="py-3 px-4">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-muted-foreground mr-2">
+            <span className="text-xs font-medium text-muted-foreground shrink-0">
               Vista:
             </span>
-            <Button
-              variant={viewMode === "calendar" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("calendar")}
-              className="flex items-center gap-2"
-            >
-              <Calendar className="w-4 h-4" />
-              Calendario Semanal
-            </Button>
-            <Button
-              variant={viewMode === "list" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setViewMode("list")}
-              className="flex items-center gap-2"
-            >
-              <Clock className="w-4 h-4" />
-              Lista de Horarios
-            </Button>
+            <div className="flex flex-1 gap-2">
+              <Button
+                variant={viewMode === "calendar" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("calendar")}
+                className="flex-1 gap-1.5"
+              >
+                <Calendar className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Calendario Semanal</span>
+                <span className="sm:hidden">Calendario</span>
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setViewMode("list")}
+                className="flex-1 gap-1.5"
+              >
+                <Clock className="w-4 h-4 shrink-0" />
+                <span className="hidden sm:inline">Lista de Horarios</span>
+                <span className="sm:hidden">Lista</span>
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Calendario semanal */}
+      {/* ── Calendario semanal ─────────────────────────────────────────── */}
       {viewMode === "calendar" && (
         <Card id="tour-horario-calendario">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Calendar className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 shrink-0" />
               <span>Horario Semanal</span>
-              <Badge variant="secondary" className="ml-2">
-                Vista de Calendario
+              <Badge variant="secondary" className="text-xs">
+                Calendario
               </Badge>
             </CardTitle>
           </CardHeader>
@@ -673,7 +687,7 @@ export default function SchedulesManagement() {
             {!dataLoaded ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">
+                <p className="text-base font-medium mb-1">
                   Cargando tu horario...
                 </p>
                 <p className="text-sm">
@@ -681,115 +695,111 @@ export default function SchedulesManagement() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <div className="grid grid-cols-6 gap-2 min-w-[800px]">
-                  {/* Columna de horas */}
-                  <div className="col-span-1">
-                    <div className="h-12 flex items-center justify-center font-semibold text-sm bg-muted rounded">
-                      Hora
+              <>
+                <p className="text-xs text-muted-foreground mb-3 flex items-center justify-center gap-1 sm:hidden select-none">
+                  ← Desliza horizontalmente para ver el calendario completo →
+                </p>
+                <div className="overflow-x-auto -mx-2 px-2">
+                  <div className="grid grid-cols-6 gap-2 min-w-[760px]">
+                    {/* Columna de horas */}
+                    <div className="col-span-1">
+                      <div className="h-12 flex items-center justify-center font-semibold text-sm bg-muted rounded">
+                        Hora
+                      </div>
+                      {horasDelDia.map((hora) => (
+                        <div
+                          key={hora}
+                          className="h-20 flex items-center justify-center text-xs font-medium text-muted-foreground border-t"
+                        >
+                          {hora}
+                        </div>
+                      ))}
                     </div>
-                    {horasDelDia.map((hora) => (
-                      <div
-                        key={hora}
-                        className="h-20 flex items-center justify-center text-sm font-medium text-muted-foreground border-t"
-                      >
-                        {hora}
+
+                    {/* Columnas de días */}
+                    {horariosPorDia.map((diaData) => (
+                      <div key={diaData.dia} className="col-span-1 relative">
+                        <div className="h-12 flex items-center justify-center font-semibold text-xs bg-muted rounded mb-2">
+                          {diaData.dia}
+                        </div>
+                        <div className="relative">
+                          {horasDelDia.map((hora) => (
+                            <div
+                              key={hora}
+                              className="h-20 border-t border-border/50"
+                            />
+                          ))}
+                          {diaData.horarios.map((horario) => {
+                            const startHour = parseInt(
+                              horario.horaInicio.split(":")[0],
+                            );
+                            const startMinute = parseInt(
+                              horario.horaInicio.split(":")[1],
+                            );
+                            const endHour = parseInt(
+                              horario.horaFin.split(":")[0],
+                            );
+                            const endMinute = parseInt(
+                              horario.horaFin.split(":")[1],
+                            );
+                            const topPosition =
+                              (startHour - 6) * 80 + (startMinute / 60) * 80;
+                            const duration =
+                              (endHour - startHour) * 60 +
+                              (endMinute - startMinute);
+                            const height = (duration / 60) * 80;
+                            const colorClass = getColorForSubject(
+                              horario.subject_id,
+                            );
+
+                            return (
+                              <div
+                                key={horario.id}
+                                className={`absolute left-0 right-0 mx-1 rounded-lg border-2 p-1.5 ${colorClass} overflow-hidden cursor-pointer hover:opacity-80 transition-opacity`}
+                                style={{
+                                  top: `${topPosition}px`,
+                                  height: `${height}px`,
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditClick(horario);
+                                }}
+                              >
+                                <div className="text-xs font-semibold truncate leading-tight">
+                                  {horario.materia}
+                                </div>
+                                <div className="text-xs truncate opacity-80">
+                                  {horario.horaInicio.substring(0, 5)}–
+                                  {horario.horaFin.substring(0, 5)}
+                                </div>
+                                <div className="text-xs truncate opacity-70">
+                                  {horario.aula}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     ))}
                   </div>
-
-                  {/* Columnas de días */}
-                  {horariosPorDia.map((diaData) => (
-                    <div key={diaData.dia} className="col-span-1 relative">
-                      {/* Encabezado del día */}
-                      <div className="h-12 flex items-center justify-center font-semibold text-sm bg-muted rounded mb-2">
-                        {diaData.dia}
-                      </div>
-
-                      {/* Grid de horas */}
-                      <div className="relative">
-                        {horasDelDia.map((hora) => (
-                          <div
-                            key={hora}
-                            className="h-20 border-t border-border/50"
-                          />
-                        ))}
-
-                        {/* Bloques de horarios posicionados absolutamente */}
-                        {diaData.horarios.map((horario) => {
-                          const startHour = parseInt(
-                            horario.horaInicio.split(":")[0],
-                          );
-                          const startMinute = parseInt(
-                            horario.horaInicio.split(":")[1],
-                          );
-                          const endHour = parseInt(
-                            horario.horaFin.split(":")[0],
-                          );
-                          const endMinute = parseInt(
-                            horario.horaFin.split(":")[1],
-                          );
-
-                          // Calcular posición y altura
-                          const topPosition =
-                            (startHour - 6) * 80 + (startMinute / 60) * 80;
-                          const duration =
-                            (endHour - startHour) * 60 +
-                            (endMinute - startMinute);
-                          const height = (duration / 60) * 80;
-
-                          const colorClass = getColorForSubject(
-                            horario.subject_id,
-                          );
-
-                          return (
-                            <div
-                              key={horario.id}
-                              className={`absolute left-0 right-0 mx-1 rounded-lg border-2 p-2 ${colorClass} overflow-hidden cursor-pointer hover:opacity-80 transition-opacity`}
-                              style={{
-                                top: `${topPosition}px`,
-                                height: `${height}px`,
-                              }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditClick(horario);
-                              }}
-                            >
-                              <div className="text-xs font-semibold truncate">
-                                {horario.materia} - {horario.curso}{" "}
-                                {horario.grupo}
-                              </div>
-                              <div className="text-xs truncate">
-                                {horario.horaInicio.substring(0, 5)} -{" "}
-                                {horario.horaFin.substring(0, 5)} |{" "}
-                                {horario.profesor}
-                              </div>
-                              <div className="text-xs truncate opacity-70">
-                                {horario.aula}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
                 </div>
-              </div>
+              </>
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* Lista de horarios */}
+      {/* ── Lista de horarios ──────────────────────────────────────────── */}
       {viewMode === "list" && (
         <Card id="tour-horario-lista">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Clock className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5 shrink-0" />
               <span>Lista de Horarios</span>
               {dataLoaded && (
-                <Badge variant="secondary" className="ml-2">
-                  {filteredHorarios.length} horarios
+                <Badge variant="secondary" className="text-xs">
+                  {filteredHorarios.length}{" "}
+                  {filteredHorarios.length === 1 ? "horario" : "horarios"}
                 </Badge>
               )}
             </CardTitle>
@@ -798,102 +808,96 @@ export default function SchedulesManagement() {
             {!dataLoaded ? (
               <div className="text-center py-12 text-muted-foreground">
                 <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p className="text-lg font-medium mb-2">
+                <p className="text-base font-medium mb-1">
                   Cargando tu horario...
                 </p>
                 <p className="text-sm">
                   Por favor espera mientras cargamos tus horarios
                 </p>
               </div>
+            ) : filteredHorarios.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                No tienes horarios asignados.
+              </div>
             ) : (
               <div className="space-y-6">
-                {filteredHorarios.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No tienes horarios asignados.
-                  </div>
-                ) : (
-                  <>
-                    {/* Agrupar horarios por día */}
-                    {horariosPorDia.map((diaData) => {
-                      // Filtrar solo los horarios que corresponden a este día
-                      const horariosDelDia = filteredHorarios.filter(
-                        (h) => h.day_of_week === diaData.dayNumber,
-                      );
+                {horariosPorDia.map((diaData) => {
+                  const horariosDelDia = filteredHorarios.filter(
+                    (h) => h.day_of_week === diaData.dayNumber,
+                  );
+                  if (horariosDelDia.length === 0) return null;
 
-                      // Solo mostrar el día si tiene horarios
-                      if (horariosDelDia.length === 0) return null;
+                  return (
+                    <div key={diaData.dia} className="space-y-3">
+                      {/* Encabezado del día */}
+                      <div className="flex items-center gap-2 pb-2 border-b">
+                        <Calendar className="w-4 h-4 text-primary shrink-0" />
+                        <h3 className="text-base font-semibold text-foreground">
+                          {diaData.dia}
+                        </h3>
+                        <Badge variant="secondary" className="text-xs">
+                          {horariosDelDia.length}{" "}
+                          {horariosDelDia.length === 1 ? "clase" : "clases"}
+                        </Badge>
+                      </div>
 
-                      return (
-                        <div key={diaData.dia} className="space-y-3">
-                          {/* Encabezado del día */}
-                          <div className="flex items-center gap-2 pb-2 border-b">
-                            <Calendar className="w-5 h-5 text-primary" />
-                            <h3 className="text-lg font-semibold text-foreground">
-                              {diaData.dia}
-                            </h3>
-                            <Badge variant="secondary" className="ml-2">
-                              {horariosDelDia.length}{" "}
-                              {horariosDelDia.length === 1 ? "clase" : "clases"}
-                            </Badge>
-                          </div>
+                      {/* Tarjetas de horario */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {horariosDelDia.map((horario) => (
+                          <Card
+                            key={horario.id}
+                            className="border cursor-pointer hover:shadow-lg transition-shadow"
+                            onClick={() => handleEditClick(horario)}
+                          >
+                            <CardContent className="p-4 space-y-3">
+                              {/* Hora */}
+                              <div className="flex items-center justify-between gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs shrink-0"
+                                >
+                                  {horario.dia}
+                                </Badge>
+                                <span className="text-xs font-semibold text-blue-600 tabular-nums">
+                                  {horario.horaInicio.substring(0, 5)} –{" "}
+                                  {horario.horaFin.substring(0, 5)}
+                                </span>
+                              </div>
 
-                          {/* Horarios del día */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {horariosDelDia.map((horario) => (
-                              <Card
-                                key={horario.id}
-                                className="border border-border cursor-pointer hover:shadow-lg transition-shadow"
-                                onClick={() => handleEditClick(horario)}
-                              >
-                                <CardContent className="p-4">
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between">
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs"
-                                      >
-                                        {horario.dia}
-                                      </Badge>
-                                      <span className="text-sm font-medium text-blue-600">
-                                        {horario.horaInicio} - {horario.horaFin}
-                                      </span>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                      <div className="flex items-center space-x-2 text-sm">
-                                        <BookOpen className="w-4 h-4 text-green-500" />
-                                        <span className="font-medium">
-                                          {horario.materia}
-                                        </span>
-                                      </div>
-
-                                      <div className="flex items-center space-x-2 text-sm">
-                                        <Users className="w-4 h-4 text-blue-500" />
-                                        <span>{horario.profesor}</span>
-                                      </div>
-
-                                      <div className="flex items-center space-x-2 text-sm">
-                                        <Users className="w-4 h-4 text-purple-500" />
-                                        <span>
-                                          {horario.curso} - {horario.grupo}
-                                        </span>
-                                      </div>
-
-                                      <div className="flex items-center space-x-2 text-sm">
-                                        <MapPin className="w-4 h-4 text-orange-500" />
-                                        <span>{horario.aula}</span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </>
-                )}
+                              {/* Detalles */}
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-2 text-sm min-w-0">
+                                  <BookOpen className="w-4 h-4 text-green-500 shrink-0" />
+                                  <span className="font-medium truncate">
+                                    {horario.materia}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm min-w-0">
+                                  <Users className="w-4 h-4 text-blue-500 shrink-0" />
+                                  <span className="truncate text-muted-foreground">
+                                    {horario.profesor}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm min-w-0">
+                                  <Users className="w-4 h-4 text-purple-500 shrink-0" />
+                                  <span className="truncate text-muted-foreground">
+                                    {horario.curso} — {horario.grupo}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-sm min-w-0">
+                                  <MapPin className="w-4 h-4 text-orange-500 shrink-0" />
+                                  <span className="truncate text-muted-foreground">
+                                    {horario.aula}
+                                  </span>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </CardContent>

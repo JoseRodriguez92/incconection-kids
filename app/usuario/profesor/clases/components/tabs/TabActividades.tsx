@@ -215,15 +215,18 @@ export function TabActividades({
     return (
       <div
         key={actividad.id}
-        className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+        className="flex items-start justify-between p-3 sm:p-4 border rounded-lg hover:bg-muted/50 transition-colors"
       >
-        <div className="flex items-start gap-3 flex-1">
-          <FileText className="h-8 w-8 text-orange-500 mt-1 shrink-0" />
+        <div className="flex items-start gap-2 sm:gap-3 flex-1 min-w-0">
+          <FileText className="h-6 w-6 sm:h-8 sm:w-8 text-orange-500 mt-0.5 shrink-0" />
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <p className="font-medium text-lg">{actividad.title}</p>
+            {/* Fila 1: título */}
+            <p className="font-medium text-sm sm:text-base leading-snug">{actividad.title}</p>
+
+            {/* Fila 2: estado + condición + peso — todos compactos */}
+            <div className="flex items-center gap-1 flex-wrap mt-1">
               <span
-                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${
                   actividad.is_active
                     ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-400"
                     : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400"
@@ -233,7 +236,7 @@ export function TabActividades({
               </span>
               {cond && (
                 <span
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium"
                   style={{
                     backgroundColor: cond.color ? `${cond.color}20` : undefined,
                     color: cond.color ?? undefined,
@@ -245,49 +248,52 @@ export function TabActividades({
                 </span>
               )}
               {actividad.grade_percentage !== null && (
-                <>
-                  <span className="text-xs text-muted-foreground">Peso:</span>
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400">
-                    {actividad.grade_percentage}% del ciclo
-                  </span>
-                </>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-400">
+                  {actividad.grade_percentage}%
+                </span>
               )}
             </div>
+
             {actividad.description && (
-              <p className="text-sm text-muted-foreground mt-1">
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
                 {actividad.description}
               </p>
             )}
-            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground flex-wrap">
-              {actividad.mime_type && <span>{actividad.mime_type}</span>}
-              {actividad.mime_type && <span>•</span>}
-              <span>{formatDate(actividad.created_at)}</span>
-              {actividad.file_size && (
-                <>
-                  <span>•</span>
-                  <span>{formatFileSize(actividad.file_size)}</span>
-                </>
-              )}
-            </div>
+
+            {/* Metadata en una sola línea truncada */}
+            <p className="text-[10px] text-muted-foreground mt-1 truncate">
+              {[
+                actividad.mime_type?.split("/")[1]?.toUpperCase(),
+                formatDate(actividad.created_at),
+                actividad.file_size ? formatFileSize(actividad.file_size) : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+
             {actividad.original_name && (
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[10px] text-muted-foreground truncate">
                 📎 {actividad.original_name}
               </p>
             )}
+
             {actividad.limit_date && (
-              <div className="mt-2">
+              <div className="mt-1">
                 {(() => {
                   const status = getLimitDateStatus(actividad.limit_date);
                   if (!status) return null;
                   const Icon = status.icon;
+                  const d = new Date(actividad.limit_date);
+                  const compactDate = d.toLocaleString("es-ES", {
+                    day: "2-digit", month: "2-digit",
+                    hour: "2-digit", minute: "2-digit",
+                  });
                   return (
                     <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${status.bgColor} ${status.color}`}
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium ${status.bgColor} ${status.color}`}
                     >
-                      <Icon className="h-3.5 w-3.5" />
-                      <span>
-                        {status.text}: {formatLimitDate(actividad.limit_date)}
-                      </span>
+                      <Icon className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{status.text}: {compactDate}</span>
                     </div>
                   );
                 })()}
@@ -295,7 +301,7 @@ export function TabActividades({
             )}
           </div>
         </div>
-        <div className="flex gap-2 ml-4 shrink-0">
+        <div className="flex gap-1.5 sm:gap-2 ml-2 sm:ml-4 shrink-0">
           <Button
             size="sm"
             variant="outline"
@@ -368,16 +374,16 @@ export function TabActividades({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <CardTitle>Actividades del Curso</CardTitle>
             <CardDescription>
               Tareas, exámenes y proyectos para los estudiantes
             </CardDescription>
           </div>
-          <Button onClick={onAbrirModalAgregar}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Actividad
+          <Button onClick={onAbrirModalAgregar} className="shrink-0 gap-2">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Nueva Actividad</span>
           </Button>
         </div>
       </CardHeader>
@@ -414,12 +420,12 @@ export function TabActividades({
                 value={cycleId}
                 className="border rounded-lg px-4"
               >
-                <div className="flex items-center gap-3 justify-between">
-                  <AccordionTrigger className="hover:no-underline flex-1">
-                    <div className="flex items-center gap-3 w-full">
-                      <Calendar className="h-5 w-5 text-primary" />
-                      <div className="flex-1 text-left">
-                        <h3 className="font-semibold text-lg">
+                <div className="flex items-center gap-2 justify-between">
+                  <AccordionTrigger className="hover:no-underline flex-1 min-w-0">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0 w-full">
+                      <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary shrink-0" />
+                      <div className="flex-1 text-left min-w-0">
+                        <h3 className="font-semibold text-sm sm:text-lg truncate">
                           {getCycleName(cycleId)}
                         </h3>
                         <p className="text-xs text-muted-foreground">
@@ -434,7 +440,7 @@ export function TabActividades({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="gap-2"
+                    className="shrink-0 gap-2"
                     onClick={() => {
                       if (onCerrarNotas) {
                         onCerrarNotas(cycleId, actividadesCiclo);
@@ -442,7 +448,7 @@ export function TabActividades({
                     }}
                   >
                     <ClipboardCheck className="h-4 w-4" />
-                    <span>Cerrar Notas</span>
+                    <span className="hidden sm:inline">Cerrar Notas</span>
                   </Button>
                 </div>
 

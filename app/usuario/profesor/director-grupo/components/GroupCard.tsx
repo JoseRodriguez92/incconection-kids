@@ -38,13 +38,14 @@ export function GroupCard({
 
   return (
     <Collapsible
+      className="min-w-0"
       id={groupIdx === 0 ? "tour-dg-grupo" : undefined}
       open={isOpen}
       onOpenChange={onToggle}
     >
       <CollapsibleTrigger asChild>
-        <div className="cursor-pointer select-none group rounded-xl bg-muted/50 border border-border px-5 py-4 hover:bg-muted/70 transition-colors">
-          <div className="flex items-center justify-between gap-4">
+        <div className="cursor-pointer select-none group rounded-xl bg-muted/50 border border-border px-3 py-3 sm:px-5 sm:py-4 hover:bg-muted/70 transition-colors">
+          <div className="flex items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-3 min-w-0">
               <div className="p-2 bg-primary/15 rounded-lg shrink-0">
                 <GraduationCap className="h-5 w-5 text-primary" />
@@ -65,11 +66,11 @@ export function GroupCard({
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <Badge className="flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary border-0 hover:bg-primary/10">
-                <Users className="h-3.5 w-3.5" />
+              <Badge className="flex items-center gap-1.5 px-2 sm:px-3 py-1 bg-primary/10 text-primary border-0 hover:bg-primary/10 shrink-0">
+                <Users className="h-3.5 w-3.5 shrink-0" />
                 <span className="font-semibold">
-                  {activeCount}{" "}
-                  {activeCount !== 1 ? "estudiantes" : "estudiante"}
+                  {activeCount}
+                  <span className="hidden sm:inline"> {activeCount !== 1 ? "estudiantes" : "estudiante"}</span>
                 </span>
               </Badge>
               <div className="p-1.5 rounded-lg text-muted-foreground group-hover:bg-background/60 transition-colors">
@@ -84,7 +85,7 @@ export function GroupCard({
         </div>
       </CollapsibleTrigger>
 
-      <CollapsibleContent>
+      <CollapsibleContent className="min-w-0">
         <GradeTable
           group={group}
           groupIdx={groupIdx}

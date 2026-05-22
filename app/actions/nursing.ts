@@ -29,6 +29,9 @@ export interface CreateVisitParams {
   medications?: NursingMedication[];
   notify_parent: boolean;
   institute_name: string;
+  institute_phone?: string | null;
+  institute_address?: string | null;
+  institute_city?: string | null;
 }
 
 export type CreateVisitResult =
@@ -130,8 +133,12 @@ export async function createNurseVisit(
             status: params.status,
             temperature: params.temperature,
             notes: params.notes,
+            institutePhone: params.institute_phone,
+            instituteAddress: params.institute_address,
+            instituteCity: params.institute_city,
           }),
           fromName: params.institute_name,
+          skipTemplate: true,
         });
 
         if (result.success) {
@@ -191,119 +198,186 @@ function buildNursingEmail(p: {
   status: string;
   temperature?: number;
   notes?: string;
+  institutePhone?: string | null;
+  instituteAddress?: string | null;
+  instituteCity?: string | null;
 }): string {
   const st = STATUS_LABELS[p.status] ?? { label: p.status, color: "#1e293b", bg: "#f1f5f9" };
   const isUrgent = p.status === "remitido" || p.status === "enviado_a_casa";
 
+  const contactLine = p.institutePhone ?? "";
+  const addressLine = [p.instituteAddress, p.instituteCity].filter(Boolean).join(", ");
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#f0fdf4;font-family:'Segoe UI',Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0fdf4;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:28px 16px;">
     <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
 
-        <!-- Header -->
+        <!-- Franja de acento superior -->
         <tr>
-          <td style="background:${isUrgent ? "#dc2626" : "#0d9488"};padding:28px 32px;text-align:center;">
-            <div style="font-size:36px;margin-bottom:8px;">${isUrgent ? "🚨" : "⚕️"}</div>
-            <h1 style="margin:0;color:#fff;font-size:20px;font-weight:700;letter-spacing:0.5px;">
-              ${isUrgent ? "ATENCIÓN URGENTE —" : "Notificación de"} Enfermería
-            </h1>
-            <p style="margin:4px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">
-              ${p.instituteName}
-            </p>
+          <td style="background:${isUrgent ? "#dc2626" : "#0d9488"};height:6px;font-size:0;line-height:0;">&nbsp;</td>
+        </tr>
+
+        <!-- Header limpio -->
+        <tr>
+          <td style="padding:28px 32px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td>
+                  <p style="margin:0;font-size:11px;font-weight:700;color:${isUrgent ? "#dc2626" : "#0d9488"};text-transform:uppercase;letter-spacing:1.5px;">
+                    ${isUrgent ? "🚨 Alerta Urgente" : "⚕️ Enfermería"}
+                  </p>
+                  <h1 style="margin:4px 0 0;font-size:22px;font-weight:800;color:#0f172a;line-height:1.2;">
+                    ${isUrgent ? "Tu hijo/a necesita atención" : "Resumen de atención médica"}
+                  </h1>
+                  <p style="margin:6px 0 0;font-size:13px;color:#64748b;">${p.instituteName} · ${p.visitDate}</p>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
 
-        <!-- Student info -->
+        <!-- Separador -->
+        <tr><td style="padding:0 32px;"><div style="height:1px;background:#e2e8f0;"></div></td></tr>
+
+        <!-- Estudiante + estado -->
         <tr>
-          <td style="padding:28px 32px 0;">
-            <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">
-              Estudiante atendido/a
-            </p>
-            <h2 style="margin:0 0 4px;font-size:22px;font-weight:700;color:#0f172a;">
-              ${p.studentName}
-            </h2>
-            <p style="margin:0;font-size:12px;color:#6b7280;">${p.visitDate}</p>
+          <td style="padding:20px 32px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border-radius:10px;overflow:hidden;">
+              <tr>
+                <td style="padding:16px 20px;">
+                  <p style="margin:0 0 2px;font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Estudiante atendido/a</p>
+                  <p style="margin:0;font-size:19px;font-weight:700;color:#0f172a;">${p.studentName}</p>
+                </td>
+                <td style="padding:16px 20px;text-align:right;vertical-align:middle;">
+                  <div style="display:inline-block;background:${st.bg};color:${st.color};padding:7px 14px;border-radius:20px;font-size:12px;font-weight:700;white-space:nowrap;">
+                    ${st.label}
+                  </div>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
 
-        <!-- Status badge -->
+        <!-- Detalles de la atención -->
         <tr>
-          <td style="padding:16px 32px 0;">
-            <div style="display:inline-block;background:${st.bg};color:${st.color};padding:10px 18px;border-radius:8px;font-size:14px;font-weight:700;border:1.5px solid ${st.color}30;">
-              ${st.label}
-            </div>
-          </td>
-        </tr>
-
-        <!-- Details -->
-        <tr>
-          <td style="padding:24px 32px;">
+          <td style="padding:0 32px 20px;">
             <table width="100%" cellpadding="0" cellspacing="0">
 
               <tr>
-                <td style="padding:0 0 16px;">
-                  <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Motivo de consulta</p>
-                  <p style="margin:0;font-size:15px;color:#1e293b;font-weight:500;">${p.reason}</p>
+                <td style="padding:0 0 14px;">
+                  <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Motivo de consulta</p>
+                  <p style="margin:0;font-size:14px;color:#1e293b;font-weight:500;">${p.reason}</p>
                 </td>
               </tr>
 
               ${p.temperature ? `
               <tr>
-                <td style="padding:0 0 16px;">
-                  <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Temperatura registrada</p>
-                  <p style="margin:0;font-size:15px;color:${p.temperature >= 38 ? "#dc2626" : "#1e293b"};font-weight:600;">
-                    ${p.temperature}°C ${p.temperature >= 38 ? "⚠️ Fiebre" : ""}
+                <td style="padding:0 0 14px;">
+                  <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Temperatura</p>
+                  <p style="margin:0;font-size:14px;color:${p.temperature >= 38 ? "#dc2626" : "#1e293b"};font-weight:600;">
+                    ${p.temperature}°C${p.temperature >= 38 ? " — ⚠️ Fiebre detectada" : ""}
                   </p>
                 </td>
               </tr>` : ""}
 
               ${p.diagnosis ? `
               <tr>
-                <td style="padding:0 0 16px;">
-                  <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Diagnóstico / Observación</p>
+                <td style="padding:0 0 14px;">
+                  <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Diagnóstico / Observación</p>
                   <p style="margin:0;font-size:14px;color:#334155;">${p.diagnosis}</p>
                 </td>
               </tr>` : ""}
 
               ${p.treatment ? `
               <tr>
-                <td style="padding:0 0 16px;">
-                  <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Tratamiento aplicado</p>
+                <td style="padding:0 0 14px;">
+                  <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Tratamiento aplicado</p>
                   <p style="margin:0;font-size:14px;color:#334155;">${p.treatment}</p>
                 </td>
               </tr>` : ""}
 
               ${p.notes ? `
               <tr>
-                <td style="padding:0 0 16px;">
-                  <p style="margin:0 0 4px;font-size:11px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:1px;">Observaciones adicionales</p>
+                <td style="padding:0 0 14px;">
+                  <p style="margin:0 0 3px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Observaciones adicionales</p>
                   <p style="margin:0;font-size:14px;color:#334155;">${p.notes}</p>
                 </td>
               </tr>` : ""}
 
             </table>
+          </td>
+        </tr>
 
-            ${isUrgent ? `
-            <div style="background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:16px;margin-top:8px;">
-              <p style="margin:0;font-size:14px;color:#991b1b;font-weight:600;">
-                ⚠️ Por favor comuníquese con la institución o dirígase al colegio para mayor información.
+        ${isUrgent ? `
+        <!-- Alerta urgente -->
+        <tr>
+          <td style="padding:0 32px 20px;">
+            <div style="background:#fef2f2;border-left:4px solid #dc2626;border-radius:0 8px 8px 0;padding:14px 18px;">
+              <p style="margin:0;font-size:13px;color:#991b1b;font-weight:700;">
+                ⚠️ Acción requerida
               </p>
-            </div>` : ""}
+              <p style="margin:6px 0 0;font-size:13px;color:#991b1b;line-height:1.5;">
+                Por favor comuníquese con la institución o acérquese al colegio a la mayor brevedad posible.
+                ${contactLine ? `Puede llamarnos al <strong>${contactLine}</strong>.` : ""}
+              </p>
+            </div>
+          </td>
+        </tr>` : ""}
+
+        <!-- Separador -->
+        <tr><td style="padding:0 32px;"><div style="height:1px;background:#e2e8f0;"></div></td></tr>
+
+        <!-- Contacto institucional -->
+        <tr>
+          <td style="padding:20px 32px;">
+            <p style="margin:0 0 8px;font-size:11px;font-weight:700;color:#475569;text-transform:uppercase;letter-spacing:1px;">
+              ¿Tiene dudas? Contáctenos
+            </p>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${contactLine ? `
+              <tr>
+                <td style="padding:0 0 4px;">
+                  <p style="margin:0;font-size:13px;color:#1e293b;">
+                    📞 <strong>${contactLine}</strong>
+                  </p>
+                </td>
+              </tr>` : ""}
+              ${addressLine ? `
+              <tr>
+                <td style="padding:0 0 4px;">
+                  <p style="margin:0;font-size:13px;color:#64748b;">
+                    📍 ${addressLine}
+                  </p>
+                </td>
+              </tr>` : ""}
+              <tr>
+                <td>
+                  <p style="margin:4px 0 0;font-size:12px;color:#64748b;">
+                    Puede comunicarse directamente con la dirección o coordinación académica del colegio.
+                  </p>
+                </td>
+              </tr>
+            </table>
           </td>
         </tr>
 
         <!-- Footer -->
         <tr>
-          <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:20px 32px;text-align:center;">
-            <p style="margin:0;font-size:12px;color:#94a3b8;">
-              Este mensaje fue generado automáticamente por el sistema de enfermería de
-              <strong>${p.instituteName}</strong>.<br>
-              Si tiene alguna duda, comuníquese directamente con la institución.
+          <td style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:16px 32px;text-align:center;">
+            <p style="margin:0;font-size:11px;color:#94a3b8;line-height:1.6;">
+              Mensaje generado automáticamente por el sistema de enfermería de <strong>${p.instituteName}</strong>.<br>
+              Por favor no responda directamente a este correo.
             </p>
           </td>
+        </tr>
+
+        <!-- Franja inferior -->
+        <tr>
+          <td style="background:${isUrgent ? "#dc2626" : "#0d9488"};height:4px;font-size:0;line-height:0;">&nbsp;</td>
         </tr>
 
       </table>
