@@ -66,7 +66,7 @@ export function RiskLevelsTab({
     <>
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <CardTitle className="flex items-center gap-2">
               <Shield className="w-5 h-5" />
               Niveles de Riesgo
@@ -74,7 +74,7 @@ export function RiskLevelsTab({
             <Dialog open={isRiskDialogOpen} onOpenChange={setIsRiskDialogOpen}>
               <DialogTrigger asChild>
                 <Button
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-2 sm:shrink-0"
                   onClick={() => onEditRisk(null)}
                   disabled={!instituteId}
                 >
@@ -85,7 +85,7 @@ export function RiskLevelsTab({
                   )}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[calc(100%-2rem)] sm:max-w-lg">
                 <DialogHeader>
                   <DialogTitle>{editingRisk ? "Editar Nivel de Riesgo" : "Crear Nuevo Nivel de Riesgo"}</DialogTitle>
                   <DialogDescription>

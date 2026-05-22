@@ -32,13 +32,13 @@ export default function PsychologyManagement() {
   return (
     <div className="space-y-6">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between relative z-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between relative z-1">
         <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Brain className="w-7 h-7 text-purple-600" />
           Gestión de Psicología
         </h2>
         <Button
-          className="flex items-center space-x-2"
+          className="flex items-center space-x-2 sm:shrink-0"
           disabled={!s.instituteId}
           onClick={() => s.setIsCreateDialogOpen(true)}
         >
@@ -57,7 +57,7 @@ export default function PsychologyManagement() {
       </div>
 
       {/* ── Métricas ── */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {[
           {
             value: s.casesLoading ? null : s.cases.length,
@@ -82,10 +82,10 @@ export default function PsychologyManagement() {
           },
         ].map(({ value, label, color, Icon }) => (
           <Card key={label}>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className={`text-3xl font-bold text-${color}-600`}>
+                  <div className={`text-2xl sm:text-3xl font-bold text-${color}-600`}>
                     {value === null ? (
                       <Loader2 className="w-8 h-8 animate-spin" />
                     ) : (
@@ -106,17 +106,20 @@ export default function PsychologyManagement() {
       {/* ── Tabs principales ── */}
       <Tabs defaultValue="cases" className="w-full relative z-1">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="cases">
-            <FileText className="w-4 h-4 mr-2" />
-            Casos Psicológicos
+          <TabsTrigger value="cases" className="gap-1.5 text-xs sm:text-sm px-2">
+            <FileText className="w-4 h-4 shrink-0" />
+            <span className="sm:hidden">Casos</span>
+            <span className="hidden sm:inline">Casos Psicológicos</span>
           </TabsTrigger>
-          <TabsTrigger value="types">
-            <Brain className="w-4 h-4 mr-2" />
-            Tipos de Casos
+          <TabsTrigger value="types" className="gap-1.5 text-xs sm:text-sm px-2">
+            <Brain className="w-4 h-4 shrink-0" />
+            <span className="sm:hidden">Tipos</span>
+            <span className="hidden sm:inline">Tipos de Casos</span>
           </TabsTrigger>
-          <TabsTrigger value="risk">
-            <Shield className="w-4 h-4 mr-2" />
-            Niveles de Riesgo
+          <TabsTrigger value="risk" className="gap-1.5 text-xs sm:text-sm px-2">
+            <Shield className="w-4 h-4 shrink-0" />
+            <span className="sm:hidden">Riesgo</span>
+            <span className="hidden sm:inline">Niveles de Riesgo</span>
           </TabsTrigger>
         </TabsList>
 

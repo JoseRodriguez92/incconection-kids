@@ -81,7 +81,7 @@ export function CaseDetailsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-purple-600" />
@@ -94,24 +94,28 @@ export function CaseDetailsDialog({
 
         {selectedCase && (
           <Tabs defaultValue="sessions" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="meetings">
-                <Users className="w-4 h-4 mr-1" />Citas con Padres
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+              <TabsTrigger value="meetings" className="gap-1 text-xs sm:text-sm px-2">
+                <Users className="w-4 h-4 shrink-0" />
+                <span className="sm:hidden">Padres</span>
+                <span className="hidden sm:inline">Citas con Padres</span>
               </TabsTrigger>
-              <TabsTrigger value="sessions">
-                <Calendar className="w-4 h-4 mr-1" />Sesiones
+              <TabsTrigger value="sessions" className="gap-1 text-xs sm:text-sm px-2">
+                <Calendar className="w-4 h-4 shrink-0" />Sesiones
               </TabsTrigger>
-              <TabsTrigger value="followups">
-                <CheckCircle className="w-4 h-4 mr-1" />Pendientes - Tareas
+              <TabsTrigger value="followups" className="gap-1 text-xs sm:text-sm px-2">
+                <CheckCircle className="w-4 h-4 shrink-0" />
+                <span className="sm:hidden">Tareas</span>
+                <span className="hidden sm:inline">Pendientes - Tareas</span>
               </TabsTrigger>
-              <TabsTrigger value="files">
-                <FileText className="w-4 h-4 mr-1" />Archivos
+              <TabsTrigger value="files" className="gap-1 text-xs sm:text-sm px-2">
+                <FileText className="w-4 h-4 shrink-0" />Archivos
               </TabsTrigger>
             </TabsList>
 
             {/* ── Sesiones ── */}
             <TabsContent value="sessions" className="mt-4">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <h3 className="text-lg font-semibold">Sesiones</h3>
                 <Button onClick={() => onOpenSessionDialog()} size="sm" className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />Nueva Sesión
@@ -160,7 +164,7 @@ export function CaseDetailsDialog({
 
             {/* ── Seguimientos ── */}
             <TabsContent value="followups" className="mt-4">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <h3 className="text-lg font-semibold">Seguimientos</h3>
                 <Button onClick={() => onOpenFollowupDialog()} size="sm" className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />Nuevo Seguimiento
@@ -183,7 +187,7 @@ export function CaseDetailsDialog({
                             <Badge>{followup.status}</Badge>
                           </div>
                           <p className="font-medium text-sm mb-2">{followup.action}</p>
-                          <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2 text-sm text-muted-foreground">
                             {followup.due_at && <div><span className="font-medium">Vencimiento:</span> {formatDate(followup.due_at)}</div>}
                             {followup.responsible && <div><span className="font-medium">Responsable:</span> {followup.responsible}</div>}
                           </div>
@@ -208,7 +212,7 @@ export function CaseDetailsDialog({
 
             {/* ── Reuniones ── */}
             <TabsContent value="meetings" className="mt-4">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
                 <h3 className="text-lg font-semibold">Reuniones con Padres</h3>
                 <Button onClick={() => onOpenMeetingDialog()} size="sm" className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />Nueva Reunión
@@ -274,14 +278,14 @@ export function CaseDetailsDialog({
               ) : (
                 <div className="space-y-3">
                   {caseFiles.map((file) => (
-                    <div key={file.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded">
+                    <div key={file.id} className="border rounded-lg p-4 hover:bg-muted/50 transition-colors flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 bg-blue-100 rounded shrink-0">
                           <FileText className="w-5 h-5 text-blue-600" />
                         </div>
-                        <div>
-                          <h3 className="font-semibold">{file.title || "Sin título"}</h3>
-                          <div className="text-sm text-muted-foreground">
+                        <div className="min-w-0">
+                          <h3 className="font-semibold truncate">{file.title || "Sin título"}</h3>
+                          <div className="text-sm text-muted-foreground truncate">
                             {file.original_name} • {file.file_size ? (file.file_size / 1024).toFixed(0) : 0} KB • {formatDate(file.created_at)}
                           </div>
                           {file.period_cycle_label && (
@@ -294,7 +298,7 @@ export function CaseDetailsDialog({
                           {file.mime_type && <div className="text-xs text-muted-foreground">{file.mime_type}</div>}
                         </div>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 shrink-0">
                         <Button variant="outline" size="sm" onClick={() => onPreviewFile(file)}>
                           <FileText className="w-4 h-4" />
                         </Button>

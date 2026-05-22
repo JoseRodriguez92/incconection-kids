@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ChevronLeft, ChevronRight, Search, UserCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Loader2, Search, UserCheck } from "lucide-react";
 
 // Hooks
 import { useUserManagement } from "./UsersManagement/hooks/useUserManagement";
@@ -92,50 +92,45 @@ export function EnrolledListManagement() {
       {/* Vista de Usuarios Matriculados */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <UserCheck className="w-5 h-5" />
-              <span>Usuarios Matriculados Vinculados</span>
-            </div>
+          <CardTitle className="flex items-center gap-2">
+            <UserCheck className="w-5 h-5 shrink-0" />
+            <span>Usuarios Matriculados Vinculados</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Subtabs */}
-            <div className="flex space-x-2 bg-muted p-1 rounded-lg w-fit">
+            {/* Subtabs — full width on mobile */}
+            <div className="flex bg-muted p-1 rounded-lg">
               <Button
-                variant={
-                  activeSubTab === SUBTAB_TYPES.STUDENTS ? "default" : "ghost"
-                }
+                variant={activeSubTab === SUBTAB_TYPES.STUDENTS ? "default" : "ghost"}
                 size="sm"
+                className="flex-1 text-xs sm:text-sm"
                 onClick={() => handleTabChange(SUBTAB_TYPES.STUDENTS)}
               >
                 Estudiantes
               </Button>
               <Button
-                variant={
-                  activeSubTab === SUBTAB_TYPES.TEACHERS ? "default" : "ghost"
-                }
+                variant={activeSubTab === SUBTAB_TYPES.TEACHERS ? "default" : "ghost"}
                 size="sm"
+                className="flex-1 text-xs sm:text-sm"
                 onClick={() => handleTabChange(SUBTAB_TYPES.TEACHERS)}
               >
                 Profesores
               </Button>
               <Button
-                variant={
-                  activeSubTab === SUBTAB_TYPES.ADMIN ? "default" : "ghost"
-                }
+                variant={activeSubTab === SUBTAB_TYPES.ADMIN ? "default" : "ghost"}
                 size="sm"
+                className="flex-1 text-xs sm:text-sm"
                 onClick={() => handleTabChange(SUBTAB_TYPES.ADMIN)}
               >
-                Administración
+                Admin
               </Button>
             </div>
 
-            {/* Búsqueda y Filtros */}
-            <div className="flex gap-3">
+            {/* Búsqueda y Filtros — stack on mobile */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">
               <div className="relative flex-1 bg-white dark:bg-black rounded-md">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
                   placeholder="Buscar usuarios matriculados..."
                   value={searchActivos}
@@ -144,7 +139,7 @@ export function EnrolledListManagement() {
                 />
               </div>
               <Select value={filterPeriodId} onValueChange={handleFilterChange}>
-                <SelectTrigger className="w-[250px] bg-white dark:bg-black">
+                <SelectTrigger className="w-full sm:w-[220px] bg-white dark:bg-black">
                   <SelectValue placeholder="Filtrar por periodo" />
                 </SelectTrigger>
                 <SelectContent>
@@ -158,41 +153,24 @@ export function EnrolledListManagement() {
               </Select>
             </div>
 
-            {/* Paginación */}
+            {/* Paginación superior */}
             {!enrolledLoading && filteredEnrolled.length > 0 && (
-              <div className="flex items-center justify-between pb-2 border-b">
-                <p className="text-sm text-muted-foreground">
+              <div className="flex flex-col items-center gap-2 pb-2 border-b sm:flex-row sm:justify-between">
+                <p className="text-xs text-muted-foreground order-2 sm:order-1">
                   Mostrando{" "}
-                  <span className="font-medium">
-                    {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
-                    {Math.min(
-                      currentPage * ITEMS_PER_PAGE,
-                      filteredEnrolled.length,
-                    )}
-                  </span>{" "}
-                  de{" "}
-                  <span className="font-medium">{filteredEnrolled.length}</span>
+                  <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredEnrolled.length)}</strong>
+                  {" "}de <strong>{filteredEnrolled.length}</strong>
                 </p>
-                <div className="flex items-center gap-2 relative  ">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                    disabled={currentPage === 1}
-                  >
+                <div className="flex items-center gap-1 order-1 sm:order-2">
+                  <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+                    onClick={() => setCurrentPage((p) => p - 1)} disabled={currentPage === 1}>
                     <ChevronLeft className="w-4 h-4" />
-                    Anterior
                   </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Página {currentPage} de {totalPages}
+                  <span className="text-xs text-muted-foreground px-2">
+                    {currentPage} / {totalPages}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    Siguiente
+                  <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+                    onClick={() => setCurrentPage((p) => p + 1)} disabled={currentPage === totalPages}>
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
@@ -202,13 +180,14 @@ export function EnrolledListManagement() {
             {/* Lista de usuarios matriculados */}
             <div className="space-y-3">
               {enrolledLoading ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>Cargando usuarios...</p>
+                <div className="flex flex-col items-center justify-center py-12 gap-3 text-muted-foreground">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <p className="text-sm">Cargando usuarios...</p>
                 </div>
               ) : filteredEnrolled.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  <UserCheck className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>No se encontraron usuarios matriculados</p>
+                <div className="text-center py-12 text-muted-foreground">
+                  <UserCheck className="w-12 h-12 mx-auto mb-2 opacity-40" />
+                  <p className="text-sm">No se encontraron usuarios matriculados</p>
                 </div>
               ) : (
                 paginatedEnrolled.map((item) => (
@@ -230,41 +209,24 @@ export function EnrolledListManagement() {
               )}
             </div>
 
-            {/* Paginación */}
+            {/* Paginación inferior */}
             {!enrolledLoading && filteredEnrolled.length > 0 && (
-              <div className="flex items-center justify-between pb-2 border-b">
-                <p className="text-sm text-muted-foreground">
+              <div className="flex flex-col items-center gap-2 pt-2 border-t sm:flex-row sm:justify-between">
+                <p className="text-xs text-muted-foreground order-2 sm:order-1">
                   Mostrando{" "}
-                  <span className="font-medium">
-                    {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
-                    {Math.min(
-                      currentPage * ITEMS_PER_PAGE,
-                      filteredEnrolled.length,
-                    )}
-                  </span>{" "}
-                  de{" "}
-                  <span className="font-medium">{filteredEnrolled.length}</span>
+                  <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}–{Math.min(currentPage * ITEMS_PER_PAGE, filteredEnrolled.length)}</strong>
+                  {" "}de <strong>{filteredEnrolled.length}</strong>
                 </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => p - 1)}
-                    disabled={currentPage === 1}
-                  >
+                <div className="flex items-center gap-1 order-1 sm:order-2">
+                  <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+                    onClick={() => setCurrentPage((p) => p - 1)} disabled={currentPage === 1}>
                     <ChevronLeft className="w-4 h-4" />
-                    Anterior
                   </Button>
-                  <span className="text-sm text-muted-foreground">
-                    Página {currentPage} de {totalPages}
+                  <span className="text-xs text-muted-foreground px-2">
+                    {currentPage} / {totalPages}
                   </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage((p) => p + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    Siguiente
+                  <Button variant="outline" size="sm" className="h-8 w-8 p-0"
+                    onClick={() => setCurrentPage((p) => p + 1)} disabled={currentPage === totalPages}>
                     <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>

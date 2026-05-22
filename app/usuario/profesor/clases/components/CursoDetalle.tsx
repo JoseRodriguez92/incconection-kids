@@ -19,6 +19,7 @@ import {
   UsersRound,
   GraduationCap,
   HelpCircle,
+  ChevronLeft,
 } from "lucide-react";
 import "driver.js/dist/driver.css";
 import type { Curso } from "../types";
@@ -306,11 +307,12 @@ export function CursoDetalle({ curso, onVolver }: CursoDetalleProps) {
   }, []);
 
   return (
-    <div className="min-w-0 space-y-6 p-6 w-full">
-      <div id="tour-detalle-header" className="flex items-center justify-between relative z-1">
-        <div className="space-y-2">
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">
+    <div className="min-w-0 space-y-6 p-4 sm:p-6 w-full">
+      <div id="tour-detalle-header" className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between relative z-1">
+        {/* ── Título + badges ── */}
+        <div className="space-y-2 min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-xl sm:text-3xl font-bold tracking-tight leading-tight">
               {curso.subject?.name}
             </h1>
             {curso?.is_active !== undefined && (
@@ -318,25 +320,29 @@ export function CursoDetalle({ curso, onVolver }: CursoDetalleProps) {
                 {curso.is_active ? "Activo" : "Inactivo"}
               </Badge>
             )}
+            {/* Año académico como badge compacto en mobile */}
+            {periodoAcademico && (
+              <Badge className="sm:hidden bg-primary/10 text-primary border-0 gap-1">
+                <GraduationCap className="h-3 w-3" />
+                {periodoAcademico.name}
+              </Badge>
+            )}
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Grupo */}
-            <Badge className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-blue-100 text-blue-700 hover:bg-blue-200 border-0">
               <UsersRound className="h-3.5 w-3.5" />
               <span className="font-medium">
                 {curso.course?.name} Grupo {curso?.grupo}
               </span>
             </Badge>
 
-            {/* Separador visual */}
-            <div className="h-6 w-px bg-border" />
+            <div className="hidden sm:block h-6 w-px bg-border" />
 
-            {/* Horarios */}
             <div className="flex flex-wrap gap-2">
               {curso?.horario?.split(",").map((horario, index) => (
                 <Badge
                   key={index}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 border-0"
+                  className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-purple-100 text-purple-700 hover:bg-purple-200 border-0"
                 >
                   <Clock className="h-3.5 w-3.5" />
                   <span className="font-medium">{horario.trim()}</span>
@@ -344,22 +350,20 @@ export function CursoDetalle({ curso, onVolver }: CursoDetalleProps) {
               ))}
             </div>
 
-            {/* Aula */}
             {curso?.classroom?.name && (
               <>
-                <div className="h-6 w-px bg-border" />
-                <Badge className="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 hover:bg-green-200 border-0">
+                <div className="hidden sm:block h-6 w-px bg-border" />
+                <Badge className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-green-100 text-green-700 hover:bg-green-200 border-0">
                   <DoorOpen className="h-3.5 w-3.5" />
                   <span className="font-medium">{curso.classroom.name}</span>
                 </Badge>
               </>
             )}
 
-            {/* Código del curso */}
             {curso?.course?.code && (
               <>
-                <div className="h-6 w-px bg-border" />
-                <Badge className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-700 hover:bg-amber-200 border-0">
+                <div className="hidden sm:block h-6 w-px bg-border" />
+                <Badge className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 bg-amber-100 text-amber-700 hover:bg-amber-200 border-0">
                   <Hash className="h-3.5 w-3.5" />
                   <span className="font-medium">{curso.course.code}</span>
                 </Badge>
@@ -367,10 +371,12 @@ export function CursoDetalle({ curso, onVolver }: CursoDetalleProps) {
             )}
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          {/* Año Académico */}
+
+        {/* ── Acciones ── */}
+        <div className="flex items-center gap-2 sm:gap-4 flex-wrap sm:flex-nowrap sm:shrink-0">
+          {/* Año Académico — solo desktop */}
           {periodoAcademico && (
-            <div id="tour-detalle-periodo" className="relative flex items-center gap-3 px-5 py-3 bg-white/30  rounded-xl  border-primary/30 transition-all duration-300">
+            <div id="tour-detalle-periodo" className="hidden sm:relative sm:flex items-center gap-3 px-5 py-3 bg-white/30 rounded-xl border-primary/30 transition-all duration-300">
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 backdrop-blur-sm">
                 <GraduationCap className="h-5 w-5 text-primary" />
               </div>
@@ -389,13 +395,16 @@ export function CursoDetalle({ curso, onVolver }: CursoDetalleProps) {
           <Button
             id="tour-detalle-asistencia"
             onClick={abrirModalAsistencia}
-            className="bg-green-600 hover:bg-green-700"
+            size="sm"
+            className="bg-green-600 hover:bg-green-700 gap-2"
           >
-            <UserCheck className="h-4 w-4 mr-2" />
-            Tomar Asistencia
+            <UserCheck className="h-4 w-4" />
+            <span className="hidden sm:inline">Tomar Asistencia</span>
+            <span className="sm:hidden">Asistencia</span>
           </Button>
-          <Button variant="outline" onClick={onVolver}>
-            Volver a Mis Cursos
+          <Button variant="outline" size="sm" onClick={onVolver} className="gap-1.5">
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden sm:inline">Volver a Mis Cursos</span>
           </Button>
           <Button
             id="tour-detalle-boton"
@@ -405,7 +414,7 @@ export function CursoDetalle({ curso, onVolver }: CursoDetalleProps) {
             onClick={startTour}
           >
             <HelpCircle className="w-4 h-4" />
-            Tour
+            <span className="hidden sm:inline">Tour</span>
           </Button>
         </div>
       </div>
@@ -482,6 +491,8 @@ export function CursoDetalle({ curso, onVolver }: CursoDetalleProps) {
           <TabCalificaciones
             estudiantes={curso?.estudiantes || []}
             ciclos={ciclos}
+            actividades={activities}
+            groupHasClassId={curso?.id}
           />
         </TabsContent>
 

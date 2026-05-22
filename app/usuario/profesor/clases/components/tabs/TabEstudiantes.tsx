@@ -259,72 +259,138 @@ export function TabEstudiantes({ curso }: TabEstudiantesProps) {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Condición</TableHead>
-                <TableHead>Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {curso?.estudiantes && curso.estudiantes.length > 0 ? (
-                curso.estudiantes.map((estudiante: any) => (
-                  <TableRow key={estudiante.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {estudiante.avatar_url || estudiante.avatar ? (
-                          <img
-                            src={estudiante.avatar_url || estudiante.avatar}
-                            alt={estudiante.full_name}
-                            className="w-8 h-8 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                            <span className="text-xs font-medium text-blue-600">
-                              {estudiante.full_name
-                                ?.split(" ")
-                                .map((n: any) => n[0])
-                                .join("")
-                                .substring(0, 2)}
-                            </span>
-                          </div>
-                        )}
-                        <span>{estudiante.full_name}</span>
+          {/* Mobile cards */}
+          <div className="sm:hidden space-y-3">
+            {curso?.estudiantes && curso.estudiantes.length > 0 ? (
+              curso.estudiantes.map((estudiante: any) => (
+                <div
+                  key={estudiante.id}
+                  className="flex items-center gap-3 rounded-lg border p-3"
+                >
+                  {estudiante.avatar_url || estudiante.avatar ? (
+                    <img
+                      src={estudiante.avatar_url || estudiante.avatar}
+                      alt={estudiante.full_name}
+                      className="w-10 h-10 rounded-full object-cover shrink-0"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
+                      <span className="text-sm font-medium text-blue-600">
+                        {estudiante.full_name
+                          ?.split(" ")
+                          .map((n: any) => n[0])
+                          .join("")
+                          .substring(0, 2)}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{estudiante.full_name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{estudiante.email || "Sin email"}</p>
+                    {estudiante.conditions?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {estudiante.conditions.map((c: any) => (
+                          <span
+                            key={c.id}
+                            className="inline-flex items-center text-[10px] font-medium rounded-full px-1.5 py-0.5 border leading-none"
+                            style={
+                              c.color
+                                ? { backgroundColor: `${c.color}18`, color: c.color, borderColor: `${c.color}55` }
+                                : undefined
+                            }
+                          >
+                            {c.name}
+                          </span>
+                        ))}
                       </div>
-                    </TableCell>
-                    <TableCell>{estudiante.email}</TableCell>
-                    <TableCell>
-                      {estudiante.conditions?.length > 0 ? (
-                        <ConditionBadges conditions={estudiante.conditions} />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleVerPerfil(estudiante)}
-                      >
-                        Ver Perfil
-                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0 text-xs px-2"
+                    onClick={() => handleVerPerfil(estudiante)}
+                  >
+                    Ver Perfil
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <p className="text-center text-sm text-muted-foreground py-6">
+                No hay estudiantes inscritos en este curso
+              </p>
+            )}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Condición</TableHead>
+                  <TableHead>Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {curso?.estudiantes && curso.estudiantes.length > 0 ? (
+                  curso.estudiantes.map((estudiante: any) => (
+                    <TableRow key={estudiante.id}>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          {estudiante.avatar_url || estudiante.avatar ? (
+                            <img
+                              src={estudiante.avatar_url || estudiante.avatar}
+                              alt={estudiante.full_name}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-xs font-medium text-blue-600">
+                                {estudiante.full_name
+                                  ?.split(" ")
+                                  .map((n: any) => n[0])
+                                  .join("")
+                                  .substring(0, 2)}
+                              </span>
+                            </div>
+                          )}
+                          <span>{estudiante.full_name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{estudiante.email}</TableCell>
+                      <TableCell>
+                        {estudiante.conditions?.length > 0 ? (
+                          <ConditionBadges conditions={estudiante.conditions} />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleVerPerfil(estudiante)}
+                        >
+                          Ver Perfil
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="text-center text-muted-foreground"
+                    >
+                      No hay estudiantes inscritos en este curso
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center text-muted-foreground"
-                  >
-                    No hay estudiantes inscritos en este curso
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
 
@@ -333,7 +399,7 @@ export function TabEstudiantes({ curso }: TabEstudiantesProps) {
         open={!!selectedStudent}
         onOpenChange={(v) => !v && setSelectedStudent(null)}
       >
-        <DialogContent className="sm:max-w-[540px]">
+        <DialogContent className="w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] sm:w-auto sm:max-w-[540px]">
           <DialogHeader>
             <DialogTitle>Perfil del Estudiante</DialogTitle>
           </DialogHeader>
@@ -342,14 +408,15 @@ export function TabEstudiantes({ curso }: TabEstudiantesProps) {
             <Tabs defaultValue="perfil" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="perfil">
-                  <UserCircle className="w-4 h-4 mr-2" />
+                  <UserCircle className="w-4 h-4 mr-1.5" />
                   Perfil
                 </TabsTrigger>
                 <TabsTrigger value="archivos" className="relative">
-                  <Brain className="w-4 h-4 mr-2" />
-                  Archivos Psicológicos
+                  <Brain className="w-4 h-4 mr-1.5 shrink-0" />
+                  <span className="hidden sm:inline">Archivos Psicológicos</span>
+                  <span className="sm:hidden">Psicológicos</span>
                   {!loadingPsych && totalFiles > 0 && (
-                    <span className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-600 text-white text-[10px] font-bold">
+                    <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-purple-600 text-white text-[10px] font-bold shrink-0">
                       {totalFiles}
                     </span>
                   )}

@@ -49,7 +49,7 @@ export function FileUploadDialog({
 }: FileUploadDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Subir Archivo</DialogTitle>
           <DialogDescription>Sube un archivo relacionado con este caso psicológico</DialogDescription>
@@ -150,7 +150,7 @@ export function FilePreviewDialog({
 }: FilePreviewDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{previewFile?.title || previewFile?.original_name || "Vista Previa"}</DialogTitle>
           <DialogDescription>

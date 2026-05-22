@@ -193,7 +193,7 @@ export function ModalEditarMaterial({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange} modal={true}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] sm:w-auto sm:max-w-lg">
         <DialogHeader className="pb-1">
           <DialogTitle className="flex items-center gap-2 text-base">
             <Edit className="h-4 w-4 text-primary" />
@@ -299,7 +299,7 @@ export function ModalEditarMaterial({
           </div>
 
           {/* Fila: Condición + Estado activo */}
-          <div className="grid grid-cols-2 gap-3 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
             <div className="space-y-1.5">
               <Label htmlFor="condition" className="text-xs flex items-center gap-1">
                 <HeartHandshake className="h-3.5 w-3.5 text-violet-500" />
@@ -322,7 +322,7 @@ export function ModalEditarMaterial({
               </Select>
             </div>
 
-            <div className="flex items-center justify-between px-3 py-2 border rounded-lg h-8 bg-muted/20">
+            <div className="flex items-center justify-between px-3 py-2 border rounded-lg bg-muted/20">
               <Label htmlFor="is_active" className="text-xs cursor-pointer">Activo</Label>
               <Switch
                 id="is_active"

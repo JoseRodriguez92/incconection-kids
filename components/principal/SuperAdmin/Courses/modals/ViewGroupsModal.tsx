@@ -68,15 +68,18 @@ export function ViewGroupsModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="w-[100%] max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="w-[calc(100%-2rem)] max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Grupos del Curso: {course?.name}</DialogTitle>
+            <DialogTitle className="pr-6 leading-snug">
+              Grupos del Curso: {course?.name}
+            </DialogTitle>
           </DialogHeader>
           {course && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center gap-3">
+              {/* Filtro + crear — apilan en mobile */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <Select value={filterPeriodId} onValueChange={setFilterPeriodId}>
-                  <SelectTrigger className="w-[250px]">
+                  <SelectTrigger className="w-full sm:w-[220px]">
                     <SelectValue placeholder="Filtrar por periodo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -90,11 +93,11 @@ export function ViewGroupsModal({
                 </Select>
                 <Button
                   size="sm"
-                  className="flex items-center space-x-2"
+                  className="gap-2 w-full sm:w-auto"
                   onClick={() => setIsCreateGroupOpen(true)}
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Crear Grupo</span>
+                  Crear Grupo
                 </Button>
               </div>
 
@@ -122,84 +125,76 @@ export function ViewGroupsModal({
                         key={group.id}
                         className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500 hover:border-l-blue-600"
                       >
-                        <CardContent className="p-5">
+                        <CardContent className="p-4">
                           <div className="space-y-4">
-                            <div className="flex items-start justify-between pb-3 border-b">
-                              <div className="space-y-1">
-                                <h4 className="font-bold text-xl text-foreground flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                            {/* Cabecera: nombre + período */}
+                            <div className="flex items-start justify-between gap-2 pb-3 border-b">
+                              <div className="space-y-0.5 min-w-0">
+                                <h4 className="font-bold text-lg text-foreground flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
                                     <span className="text-blue-600 dark:text-blue-400 font-bold text-sm">
                                       {group.name}
                                     </span>
                                   </div>
-                                  Grupo {group.name}
+                                  <span className="truncate">Grupo {group.name}</span>
                                 </h4>
-                                <p className="text-xs text-muted-foreground">
-                                  ID: {group.id.slice(0, 8)}...
+                                <p className="text-xs text-muted-foreground pl-10">
+                                  ID: {group.id.slice(0, 8)}…
                                 </p>
                               </div>
-                              <Badge variant="outline" className="text-xs">
+                              <Badge variant="outline" className="text-xs shrink-0 max-w-[120px] truncate">
                                 {periodos.find((p) => p.id === (group.year as any))
                                   ?.name || `Año ${group.year}`}
                               </Badge>
                             </div>
 
-                            <div className="space-y-3">
-                              <div className="flex items-start space-x-3 p-2 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors">
-                                <UserCircle className="w-5 h-5 text-purple-500 flex-shrink-0 mt-0.5" />
+                            {/* Info: director + capacidad */}
+                            <div className="space-y-2">
+                              <div className="flex items-start gap-3 p-2 rounded-md bg-muted/40">
+                                <UserCircle className="w-5 h-5 text-purple-500 shrink-0 mt-0.5" />
                                 <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium text-muted-foreground">
-                                    Director
-                                  </p>
+                                  <p className="text-xs font-medium text-muted-foreground">Director</p>
                                   <p className="text-sm font-semibold truncate">
                                     {group.director_id
-                                      ? profiles.find((p) => p.id === group.director_id)
-                                          ?.full_name ||
-                                        profiles.find((p) => p.id === group.director_id)
-                                          ?.email ||
+                                      ? profiles.find((p) => p.id === group.director_id)?.full_name ||
+                                        profiles.find((p) => p.id === group.director_id)?.email ||
                                         "No asignado"
                                       : "No asignado"}
                                   </p>
                                 </div>
                               </div>
 
-                              <div className="flex items-start space-x-3 p-2 rounded-md bg-muted/40 hover:bg-muted/60 transition-colors">
-                                <Users className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                              <div className="flex items-start gap-3 p-2 rounded-md bg-muted/40">
+                                <Users className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
                                 <div className="flex-1">
-                                  <p className="text-xs font-medium text-muted-foreground">
-                                    Capacidad
+                                  <p className="text-xs font-medium text-muted-foreground">Capacidad</p>
+                                  <p className="text-sm font-semibold">
+                                    {studentsInGroup} / {group.max_students || "∞"} estudiantes
                                   </p>
-                                  <div className="space-y-1.5">
-                                    <p className="text-sm font-semibold">
-                                      {studentsInGroup} /{" "}
-                                      {group.max_students || "∞"} estudiantes
-                                    </p>
-                                    {group.max_students && (
-                                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                                        <div
-                                          className={`h-1.5 rounded-full transition-all ${
-                                            capacityPercentage >= 90
-                                              ? "bg-red-500"
-                                              : capacityPercentage >= 70
-                                                ? "bg-yellow-500"
-                                                : "bg-green-500"
-                                          }`}
-                                          style={{
-                                            width: `${Math.min(capacityPercentage, 100)}%`,
-                                          }}
-                                        />
-                                      </div>
-                                    )}
-                                  </div>
+                                  {group.max_students && (
+                                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 mt-1.5">
+                                      <div
+                                        className={`h-1.5 rounded-full transition-all ${
+                                          capacityPercentage >= 90
+                                            ? "bg-red-500"
+                                            : capacityPercentage >= 70
+                                              ? "bg-yellow-500"
+                                              : "bg-green-500"
+                                        }`}
+                                        style={{ width: `${Math.min(capacityPercentage, 100)}%` }}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
 
-                            <div className="grid grid-cols-3 gap-2 pt-2">
+                            {/* Acciones */}
+                            <div className="grid grid-cols-3 gap-2 pt-1">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="flex flex-col items-center gap-1 h-auto py-3 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950 transition-all"
+                                className="flex flex-col items-center gap-1 h-auto py-2.5 hover:bg-blue-50 hover:border-blue-300 dark:hover:bg-blue-950 transition-all"
                                 onClick={() => onEditGroup(group)}
                               >
                                 <Edit className="w-4 h-4 text-blue-600" />
@@ -208,7 +203,7 @@ export function ViewGroupsModal({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="flex flex-col items-center gap-1 h-auto py-3 hover:bg-green-50 hover:border-green-300 dark:hover:bg-green-950 transition-all"
+                                className="flex flex-col items-center gap-1 h-auto py-2.5 hover:bg-green-50 hover:border-green-300 dark:hover:bg-green-950 transition-all"
                                 onClick={() => onViewStudents(group)}
                               >
                                 <Users className="w-4 h-4 text-green-600" />
@@ -217,11 +212,11 @@ export function ViewGroupsModal({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="flex flex-col items-center gap-1 h-auto py-3 hover:bg-violet-50 hover:border-violet-300 dark:hover:bg-violet-950 transition-all"
+                                className="flex flex-col items-center gap-1 h-auto py-2.5 hover:bg-violet-50 hover:border-violet-300 dark:hover:bg-violet-950 transition-all"
                                 onClick={() => setBulkEnrollGroup(group)}
                               >
                                 <Upload className="w-4 h-4 text-violet-600" />
-                                <span className="text-xs">Carga CSV</span>
+                                <span className="text-xs">CSV</span>
                               </Button>
                             </div>
                           </div>

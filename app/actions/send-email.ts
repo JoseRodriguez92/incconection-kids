@@ -27,6 +27,8 @@ export type SendEmailParams = {
   fromName?: string;
   /** Archivos adjuntos opcionales */
   attachments?: EmailAttachment[];
+  /** Si true, envía el HTML tal cual sin envolverlo en circularTemplate */
+  skipTemplate?: boolean;
 };
 
 export type SendEmailResult =
@@ -49,30 +51,25 @@ export async function sendEmail({
   html,
   fromName,
   attachments,
+  skipTemplate = false,
 }: SendEmailParams): Promise<SendEmailResult> {
   try {
     const from = `"${fromName ?? process.env.SMTP_FROM_NAME ?? "Colegio"}" <jaimequijano.incconection-kids@gmail.com>`;
 
-    // Si solo se usa bcc (envío masivo), el "to" muestra el nombre del colegio
-    // así el destinatario ve "Colegio X" en el campo Para: en lugar del email crudo
     const schoolName = process.env.SMTP_FROM_NAME ?? "Colegio";
     const resolvedTo =
       to ?? `"${schoolName}" <jaimequijano.incconection-kids@gmail.com>`;
 
-    // Envolver el contenido HTML del editor con el template del colegio
-    // (logo, cabecera con degradado, footer institucional)
-    const wrappedHtml = circularTemplate({
-      content: html,
-      schoolName,
-      logoUrl: process.env.SCHOOL_LOGO_URL,
-    });
+    const finalHtml = skipTemplate
+      ? html
+      : circularTemplate({ content: html, schoolName, logoUrl: process.env.SCHOOL_LOGO_URL });
 
     await transporter.sendMail({
       from,
       to: resolvedTo,
       bcc,
       subject,
-      html: wrappedHtml,
+      html: finalHtml,
       attachments,
     });
 

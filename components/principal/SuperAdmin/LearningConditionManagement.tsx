@@ -162,7 +162,7 @@ export function LearningConditionManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between relative z-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between relative">
         <div>
           <h2 className="text-2xl font-bold flex items-center gap-2">
             <HeartHandshake className="w-6 h-6 text-violet-500" />
@@ -172,7 +172,7 @@ export function LearningConditionManagement() {
             Gestiona el catálogo de condiciones de aprendizaje del colegio
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
+        <Button onClick={openCreate} className="gap-2 self-start sm:self-auto">
           <Plus className="w-4 h-4" />
           Nueva Condición
         </Button>
@@ -256,7 +256,7 @@ export function LearningConditionManagement() {
         open={isModalOpen}
         onOpenChange={(v) => !saving && setIsModalOpen(v)}
       >
-        <DialogContent className="sm:max-w-[440px]">
+        <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[440px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editing ? "Editar condición" : "Nueva condición de aprendizaje"}

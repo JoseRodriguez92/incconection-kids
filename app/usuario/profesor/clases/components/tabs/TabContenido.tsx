@@ -109,22 +109,22 @@ export function TabContenido({
         <div
           className={`h-0.5 w-full ${active ? "bg-blue-500" : "bg-muted-foreground/40"}`}
         />
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center justify-between p-3 sm:p-4">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <FileText
-              className={`h-8 w-8 shrink-0 ${active ? "text-blue-500" : "text-muted-foreground"}`}
+              className={`h-7 w-7 sm:h-8 sm:w-8 shrink-0 ${active ? "text-blue-500" : "text-muted-foreground"}`}
             />
             <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5 flex-wrap">
                 <p
-                  className={`font-medium truncate ${!active ? "line-through text-muted-foreground" : ""}`}
+                  className={`font-medium text-sm truncate ${!active ? "line-through text-muted-foreground" : ""}`}
                 >
                   {material.title}
                 </p>
                 <ActiveBadge active={active} />
                 {cond && (
                   <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium shrink-0"
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0"
                     style={{
                       backgroundColor: cond.color
                         ? `${cond.color}20`
@@ -143,19 +143,19 @@ export function TabContenido({
                   {material.description}
                 </p>
               )}
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {material.mime_type || "Archivo"} •{" "}
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">
+                {material.mime_type?.split("/")[1]?.toUpperCase() || "Archivo"} •{" "}
                 {formatDate(material.created_at)} •{" "}
                 {formatFileSize(material.file_size)}
               </p>
               {material.original_name && (
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 truncate">
                   📎 {material.original_name}
                 </p>
               )}
             </div>
           </div>
-          <div className="flex gap-2 shrink-0 ml-3">
+          <div className="flex gap-1.5 sm:gap-2 shrink-0 ml-2 sm:ml-3">
             <Button
               size="sm"
               variant="outline"
@@ -223,16 +223,16 @@ export function TabContenido({
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <CardTitle>Material del Curso</CardTitle>
             <CardDescription>
               Documentos, videos y recursos de aprendizaje
             </CardDescription>
           </div>
-          <Button onClick={onAbrirModalAgregar}>
-            <Plus className="h-4 w-4 mr-2" />
-            Agregar Contenido
+          <Button onClick={onAbrirModalAgregar} className="shrink-0 gap-2">
+            <Plus className="h-4 w-4" />
+            <span className="hidden sm:inline">Agregar Contenido</span>
           </Button>
         </div>
       </CardHeader>
@@ -281,23 +281,23 @@ export function TabContenido({
                   value={cycleGroup.id}
                   className="border rounded-lg overflow-hidden"
                 >
-                  <AccordionTrigger className="px-4 py-3 hover:bg-muted/50 hover:no-underline">
-                    <div className="flex items-center justify-between w-full pr-4">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10">
-                          <Calendar className="h-5 w-5 text-primary" />
+                  <AccordionTrigger className="px-3 sm:px-4 py-3 hover:bg-muted/50 hover:no-underline">
+                    <div className="flex items-center justify-between w-full pr-2 sm:pr-4 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10 shrink-0">
+                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                         </div>
-                        <div className="text-left">
-                          <h3 className="font-semibold text-base">
+                        <div className="text-left min-w-0">
+                          <h3 className="font-semibold text-sm sm:text-base truncate">
                             Grupo: {cycleGroup.name}
                           </h3>
-                          <p className="text-sm text-muted-foreground">
+                          <p className="text-xs sm:text-sm text-muted-foreground">
                             {cycleGroup.materiales.length} material
                             {cycleGroup.materiales.length !== 1 ? "es" : ""}
                           </p>
                         </div>
                       </div>
-                      <Badge variant="secondary" className="ml-auto mr-2">
+                      <Badge variant="secondary" className="ml-auto mr-2 shrink-0">
                         {cycleGroup.materiales.length}
                       </Badge>
                     </div>

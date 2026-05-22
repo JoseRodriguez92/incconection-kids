@@ -575,29 +575,29 @@ export function TabMetodologia({ grupoId }: TabMetodologiaProps) {
       {/* Video de Metodología */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Video className="h-5 w-5 text-primary" />
               <CardTitle>Video de Metodología</CardTitle>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-2 shrink-0">
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setModalVideoOpen(true)}
               >
-                <Upload className="h-4 w-4 mr-2" />
-                {methodology?.welcome_video_url
-                  ? "Cambiar Video"
-                  : "Subir Video"}
+                <Upload className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">
+                  {methodology?.welcome_video_url ? "Cambiar Video" : "Subir Video"}
+                </span>
               </Button>
               <Button
                 size="sm"
                 variant="outline"
                 onClick={() => setModalEditNotesOpen(true)}
               >
-                <Edit className="h-4 w-4 mr-2" />
-                Editar Notas
+                <Edit className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Editar Notas</span>
               </Button>
             </div>
           </div>
@@ -611,11 +611,11 @@ export function TabMetodologia({ grupoId }: TabMetodologiaProps) {
               <video
                 src={methodology.welcome_video_url}
                 controls
-                className="h-[400px] md:h-[500px] w-auto max-w-full object-contain"
+                className="h-[220px] sm:h-[350px] md:h-[500px] w-auto max-w-full object-contain"
               />
             </div>
           ) : (
-            <div className="w-full h-[400px] md:h-[500px] bg-muted rounded-lg flex items-center justify-center border-2 border-dashed">
+            <div className="w-full h-[220px] sm:h-[350px] md:h-[500px] bg-muted rounded-lg flex items-center justify-center border-2 border-dashed">
               <div className="text-center space-y-3">
                 <Video className="h-16 w-16 text-muted-foreground mx-auto" />
                 <div>
@@ -642,7 +642,7 @@ export function TabMetodologia({ grupoId }: TabMetodologiaProps) {
       {/* Habilidades a Desarrollar */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Target className="h-5 w-5 text-primary" />
               <CardTitle>Habilidades a Desarrollar</CardTitle>
@@ -652,9 +652,10 @@ export function TabMetodologia({ grupoId }: TabMetodologiaProps) {
               variant="outline"
               onClick={openSkillsModal}
               disabled={!methodology}
+              className="shrink-0"
             >
-              <Edit className="h-4 w-4 mr-2" />
-              Gestionar Habilidades
+              <Edit className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Gestionar Habilidades</span>
             </Button>
           </div>
           <CardDescription>
@@ -705,7 +706,7 @@ export function TabMetodologia({ grupoId }: TabMetodologiaProps) {
       {/* Documentos - Silabus */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
               <CardTitle>Silabus y Documentos</CardTitle>
@@ -714,9 +715,12 @@ export function TabMetodologia({ grupoId }: TabMetodologiaProps) {
               size="sm"
               variant="outline"
               onClick={() => setModalSyllabusOpen(true)}
+              className="shrink-0"
             >
-              <Upload className="h-4 w-4 mr-2" />
-              {methodology?.syllabus_path ? "Cambiar Silabus" : "Subir Silabus"}
+              <Upload className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">
+                {methodology?.syllabus_path ? "Cambiar Silabus" : "Subir Silabus"}
+              </span>
             </Button>
           </div>
           <CardDescription>

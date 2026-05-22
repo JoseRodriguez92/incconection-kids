@@ -301,13 +301,13 @@ export function EntregasModal({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[860px] max-h-[90vh] flex flex-col">
+        <DialogContent className="w-[calc(100%-1rem)] max-w-[calc(100%-1rem)] sm:w-auto sm:max-w-[860px] max-h-[90vh] flex flex-col overflow-hidden">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 pr-8">
-              <Star className="w-5 h-5 text-orange-500" />
-              Entregas — {actividad.title}
+            <DialogTitle className="flex items-center gap-2 pr-8 text-sm sm:text-base">
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500 shrink-0" />
+              <span className="truncate">Entregas — {actividad.title}</span>
             </DialogTitle>
-            <DialogDescription className="flex gap-4 text-xs mt-1">
+            <DialogDescription className="flex flex-wrap gap-x-4 gap-y-1 text-xs mt-1">
               <span>
                 <span className="font-semibold text-foreground">
                   {estudiantesFiltrados.length}
@@ -337,7 +337,7 @@ export function EntregasModal({
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="flex-1 -mx-6 px-6">
+          <ScrollArea className="flex-1 min-h-0">
             {loading ? (
               <div className="flex items-center justify-center py-16 text-muted-foreground">
                 <Loader2 className="w-6 h-6 animate-spin mr-2" />
@@ -387,11 +387,11 @@ export function EntregasModal({
 
                       {/* Cabecera clickeable (acordeón) */}
                       <button
-                        className="w-full p-4 flex items-center justify-between gap-3 text-left hover:bg-muted/30 transition-colors"
+                        className="w-full p-3 sm:p-4 flex items-center justify-between gap-2 text-left hover:bg-muted/30 transition-colors"
                         onClick={toggleExpanded}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary shrink-0">
                             {(est.full_name || "?")[0].toUpperCase()}
                           </div>
                           <div className="min-w-0">
@@ -399,7 +399,7 @@ export function EntregasModal({
                               {est.full_name}
                             </p>
                             <p className="text-xs text-muted-foreground truncate">
-                              {est.email}
+                              {est.email || "Sin email"}
                             </p>
                             <ConditionBadges
                               conditions={est.conditions}
@@ -407,32 +407,32 @@ export function EntregasModal({
                             />
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           {allSubs.length > 1 && (
-                            <span className="inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                            <span className="hidden sm:inline-flex items-center gap-1 text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                               <History className="w-3 h-3" />
-                              {allSubs.length} intentos
+                              {allSubs.length}
                             </span>
                           )}
                           {latestSub ? (
                             latestSub.grade != null ? (
-                              <Badge className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 gap-1">
+                              <Badge className="bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 gap-1 text-[10px] sm:text-xs px-1.5">
                                 <CheckCircle2 className="w-3 h-3" />
-                                Nota: {latestSub.grade}
+                                <span className="hidden sm:inline">Nota: </span>{latestSub.grade}
                               </Badge>
                             ) : (
-                              <Badge className="bg-green-100 text-green-700 border-green-300 dark:bg-green-900 dark:text-green-300 gap-1">
+                              <Badge className="bg-green-100 text-green-700 border-green-300 dark:bg-green-900 dark:text-green-300 gap-1 text-[10px] sm:text-xs px-1.5">
                                 <CheckCircle2 className="w-3 h-3" />
-                                Entregó
+                                <span className="hidden sm:inline">Entregó</span>
                               </Badge>
                             )
                           ) : (
                             <Badge
                               variant="outline"
-                              className="text-muted-foreground gap-1"
+                              className="text-muted-foreground gap-1 text-[10px] sm:text-xs px-1.5"
                             >
                               <XCircle className="w-3 h-3" />
-                              Pendiente
+                              <span className="hidden sm:inline">Pendiente</span>
                             </Badge>
                           )}
                           {isExpanded ? (
@@ -445,12 +445,12 @@ export function EntregasModal({
 
                       {/* Cuerpo colapsable — visible siempre que se expanda */}
                       {isExpanded && (
-                        <div className="px-4 pb-4 space-y-3 border-t pt-3">
+                        <div className="px-4 pb-4 space-y-3 border-t pt-3 overflow-hidden">
 
                           {/* Archivo de entrega (solo si entregó) */}
                           {latestSub && latestSub.storage_path && (
-                            <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 border">
-                              <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/40 rounded-lg px-3 py-2 border gap-2 overflow-hidden">
+                              <div className="flex items-center gap-1.5 min-w-0">
                                 {allSubs.length > 1 && (
                                   <span className="shrink-0 font-semibold text-primary text-[10px] bg-primary/10 px-1.5 py-0.5 rounded">
                                     #{latestSub.attempt_number ?? 1}
@@ -460,30 +460,30 @@ export function EntregasModal({
                                   {latestSub.original_name || "Archivo sin nombre"}
                                 </span>
                                 {latestSub.file_size && (
-                                  <span className="shrink-0">
+                                  <span className="shrink-0 text-[10px]">
                                     {formatSize(latestSub.file_size)}
                                   </span>
                                 )}
                               </div>
-                              <div className="flex items-center gap-2 shrink-0 ml-2">
-                                <span>{formatDate(latestSub.submitted_at)}</span>
+                              <div className="flex items-center gap-1 shrink-0">
+                                <span className="hidden sm:inline text-[10px]">{formatDate(latestSub.submitted_at)}</span>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-7 w-7 p-0"
+                                  className="h-6 w-6 p-0"
                                   onClick={() => handlePreview(latestSub)}
                                   title="Previsualizar"
                                 >
-                                  <Eye className="w-4 h-4" />
+                                  <Eye className="w-3.5 h-3.5" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-7 w-7 p-0"
+                                  className="h-6 w-6 p-0"
                                   onClick={() => handleDownload(latestSub)}
                                   title="Descargar"
                                 >
-                                  <Download className="w-4 h-4" />
+                                  <Download className="w-3.5 h-3.5" />
                                 </Button>
                               </div>
                             </div>
@@ -507,9 +507,9 @@ export function EntregasModal({
                               {prevSubs.map((s) => (
                                 <div
                                   key={s.id}
-                                  className="flex items-center justify-between text-xs text-muted-foreground bg-muted/20 rounded-md px-3 py-1.5 border border-dashed"
+                                  className="flex items-center justify-between text-xs text-muted-foreground bg-muted/20 rounded-md px-3 py-1.5 border border-dashed gap-2 overflow-hidden"
                                 >
-                                  <div className="flex items-center gap-2 min-w-0">
+                                  <div className="flex items-center gap-1.5 min-w-0">
                                     <span className="shrink-0 text-[10px] font-semibold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
                                       #{s.attempt_number ?? "—"}
                                     </span>
@@ -517,13 +517,13 @@ export function EntregasModal({
                                       {s.original_name || "Archivo"}
                                     </span>
                                     {s.file_size && (
-                                      <span className="shrink-0">
+                                      <span className="shrink-0 text-[10px]">
                                         {formatSize(s.file_size)}
                                       </span>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-2 shrink-0 ml-2">
-                                    <span>{formatDate(s.submitted_at)}</span>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <span className="hidden sm:inline text-[10px]">{formatDate(s.submitted_at)}</span>
                                     <Button
                                       variant="ghost"
                                       size="sm"
@@ -550,14 +550,10 @@ export function EntregasModal({
 
                           {/* Calificación — siempre visible */}
                           <div className="pt-3 border-t">
-                            <div className="flex items-center gap-3 bg-muted/30 rounded-lg px-4 py-3">
+                            <div className="flex flex-wrap items-center gap-2 bg-muted/30 rounded-lg px-3 sm:px-4 py-3">
                               <Star className="w-4 h-4 text-orange-500 shrink-0" />
-                              <span className="text-sm font-medium text-foreground">
-                                Nota
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                (0 – 10)
-                              </span>
+                              <span className="text-sm font-medium text-foreground">Nota</span>
+                              <span className="text-xs text-muted-foreground">(0–10)</span>
                               <Input
                                 type="number"
                                 min={0}
@@ -574,17 +570,16 @@ export function EntregasModal({
                                     },
                                   }))
                                 }
-                                className="h-8 w-24 text-sm ml-1"
+                                className="h-8 w-20 text-sm"
                               />
-                              <div className="flex-1" />
                               {latestSub?.graded_at && (
-                                <span className="text-xs text-muted-foreground shrink-0">
-                                  Calificado: {formatDate(latestSub.graded_at)}
+                                <span className="hidden sm:inline text-[10px] text-muted-foreground">
+                                  {formatDate(latestSub.graded_at)}
                                 </span>
                               )}
                               <Button
                                 size="sm"
-                                className="gap-1.5 shrink-0"
+                                className="gap-1.5 shrink-0 ml-auto"
                                 disabled={gradeInput.saving}
                                 onClick={() =>
                                   latestSub

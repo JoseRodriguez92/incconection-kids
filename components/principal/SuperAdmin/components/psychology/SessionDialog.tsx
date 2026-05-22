@@ -51,7 +51,7 @@ export function SessionDialog({
 }: SessionDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{editingSession ? "Editar Sesión" : "Nueva Sesión"}</DialogTitle>
           <DialogDescription>
@@ -70,7 +70,7 @@ export function SessionDialog({
             />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="space-y-2 w-full">
               <Label htmlFor="modality">Modalidad</Label>
               <Select

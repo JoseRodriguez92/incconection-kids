@@ -181,32 +181,29 @@ function CursosPageInner() {
 
   // Vista principal
   return (
-    <div className="min-w-0 space-y-6 p-6">
+    <div className="min-w-0 space-y-6 p-4 sm:p-6">
       {/* Header */}
       <div id="tour-clases-header" className="space-y-2 relative z-1">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Mis Clases</h1>
-            <div className="flex items-center gap-3 mt-1">
-              <p className="text-muted-foreground">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-3xl font-bold tracking-tight leading-tight">Mis Clases</h1>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
+              <p className="text-muted-foreground text-sm sm:text-base">
                 Gestiona tus clases del periodo actual
               </p>
               {periodoActivo && (
-                <>
-                  <span className="text-muted-foreground">•</span>
-                  <Badge
-                    id="tour-clases-periodo"
-                    className="text-sm bg-green-600 hover:bg-green-700 text-white cursor-default"
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-100"></span>
-                      </span>
-                      📅 {periodoActivo.name}
+                <Badge
+                  id="tour-clases-periodo"
+                  className="text-xs sm:text-sm bg-green-600 hover:bg-green-700 text-white cursor-default"
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className="relative flex h-2 w-2 shrink-0">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-300 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-100"></span>
                     </span>
-                  </Badge>
-                </>
+                    📅 {periodoActivo.name}
+                  </span>
+                </Badge>
               )}
             </div>
           </div>
@@ -219,7 +216,7 @@ function CursosPageInner() {
             onClick={startTour}
           >
             <HelpCircle className="w-4 h-4" />
-            Tour de la sección
+            <span className="hidden sm:inline">Tour de la sección</span>
           </Button>
         </div>
       </div>
@@ -361,7 +358,7 @@ function CursosPageInner() {
               ) : (
                 <div
                   id="tour-clases-grid"
-                  className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
+                  className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3"
                 >
                   {cursosMostrados.map((curso, index) => (
                     <div

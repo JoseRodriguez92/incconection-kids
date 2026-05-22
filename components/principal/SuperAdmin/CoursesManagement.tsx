@@ -74,36 +74,38 @@ export function CoursesManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-2xl font-bold text-foreground leading-tight">
           Gestión de Cursos
         </h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap sm:shrink-0">
           <BulkGroupAssignment
             periodos={PeriodAcademicStore((s) => s.periodos)}
           />
           <Button
             size="sm"
-            className="flex items-center space-x-2"
+            className="gap-2 flex-1 sm:flex-none"
             onClick={() => setIsCreateCourseOpen(true)}
           >
             <Plus className="w-4 h-4" />
-            <span>Nuevo Curso</span>
+            Nuevo Curso
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <BookOpen className="w-5 h-5" />
+          <CardTitle className="flex items-center gap-2">
+            <BookOpen className="w-5 h-5 shrink-0" />
             <span>Lista de Cursos</span>
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {/* Buscador */}
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
                 placeholder="Buscar cursos..."
                 value={searchTerm}
@@ -111,64 +113,78 @@ export function CoursesManagement() {
                 className="pl-10"
               />
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredCourses.length === 0 ? (
                 <div className="col-span-full text-center py-12 text-muted-foreground">
                   <Users className="w-16 h-16 mx-auto mb-4 opacity-40" />
-                  <p>No se encontraron cursos</p>
+                  <p className="text-sm">No se encontraron cursos</p>
                 </div>
               ) : (
                 filteredCourses.map((course) => (
-                  <Card key={course.id}>
+                  <Card key={course.id} className="hover:shadow-md transition-shadow">
                     <CardContent className="p-4 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h3 className="font-semibold text-foreground">
+                      {/* Nombre + badge */}
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-foreground text-base leading-snug min-w-0 truncate">
                           {course.name}
                         </h3>
                         <Badge
                           variant={course.is_active ? "default" : "secondary"}
+                          className="shrink-0 text-xs"
                         >
                           {course.is_active ? "Activo" : "Inactivo"}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">
+
+                      {/* Descripción */}
+                      <p className="text-xs text-muted-foreground line-clamp-2">
                         {course.description || "Sin descripción"}
                       </p>
-                      <div className="text-xs text-muted-foreground space-y-1">
-                        <p>
-                          <strong>Código:</strong> {course.code || "N/A"}
-                        </p>
-                        <p>
-                          <strong>Nivel:</strong>{" "}
-                          {course.education_level || "N/A"}
-                        </p>
-                        <p>
-                          <strong>Grado:</strong> {course.grade_number || "N/A"}
-                        </p>
+
+                      {/* Metadata chips */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {course.code && (
+                          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            #{course.code}
+                          </span>
+                        )}
+                        {course.education_level && (
+                          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            {course.education_level}
+                          </span>
+                        )}
+                        {course.grade_number && (
+                          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                            Grado {course.grade_number}
+                          </span>
+                        )}
                       </div>
-                      <div className="flex space-x-2">
+
+                      {/* Acciones */}
+                      <div className="flex gap-2 pt-1">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1"
+                          className="flex-1 gap-1.5"
                           onClick={() => {
                             setSelectedCourse(course);
                             setIsViewGroupsOpen(true);
                           }}
                         >
-                          <Eye className="w-4 h-4 mr-2" />
+                          <Eye className="w-3.5 h-3.5" />
                           Ver Grupos
                         </Button>
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1"
+                          className="flex-1 gap-1.5"
                           onClick={() => {
                             setSelectedCourse(course);
                             setIsEditCourseOpen(true);
                           }}
                         >
-                          <Edit className="w-4 h-4 mr-2" />
+                          <Edit className="w-3.5 h-3.5" />
                           Editar
                         </Button>
                       </div>

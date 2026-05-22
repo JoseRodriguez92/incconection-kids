@@ -9,12 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import {
-  Calendar,
-  AlertTriangle,
-  BookOpen,
-  Settings,
-} from "lucide-react";
+import { Calendar, AlertTriangle, BookOpen, Settings } from "lucide-react";
 import { ChartConfig, ChartContainer } from "@/components/ui/chart";
 import { TrendingUp } from "lucide-react";
 import { Label, Pie, PieChart } from "recharts";
@@ -319,27 +314,27 @@ export function DashboardHome() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground leading-tight">
             Panel de Administración
           </h1>
-          <p className="text-muted-foreground">
+          <p className="text-sm text-muted-foreground mt-0.5">
             Bienvenido al sistema de gestión escolar
           </p>
         </div>
 
         {/* Filtro de periodo académico */}
-        <div className="flex items-center gap-3">
-          <label className="text-sm font-medium text-muted-foreground">
-            Periodo Académico:
+        <div className="flex flex-col gap-1.5 sm:items-end">
+          <label className="text-xs font-medium text-muted-foreground sm:text-right">
+            Periodo Académico
           </label>
           <Select
             value={selectedPeriodId}
             onValueChange={setSelectedPeriodId}
             disabled={academicPeriods.length === 0}
           >
-            <SelectTrigger className="w-[280px]">
+            <SelectTrigger className="w-full sm:w-64">
               <SelectValue placeholder="Selecciona un periodo" />
             </SelectTrigger>
             <SelectContent>

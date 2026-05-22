@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,11 @@ import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { deleteUser } from "@/app/actions/delete-user";
 
-import { useUserManagement } from "./UsersManagement/hooks/useUserManagement";
+import {
+  useUserManagement,
+  PAGE_SIZE,
+} from "./UsersManagement/hooks/useUserManagement";
 import { useRoleManagement } from "./UsersManagement/hooks/useRoleManagement";
-import { filterUsersBySearch } from "./UsersManagement/utils/filters";
 import { BulkCreateUsers } from "./UsersManagement/BulkCreateUsers";
 import type { ConditionItem } from "./UsersManagement/types";
 
@@ -21,12 +23,11 @@ import { ChangeEmailDialog } from "./UsersManagement/components/modals/ChangeEma
 import { CreateUserModal } from "./UsersManagement/components/modals/CreateUserModal";
 import { EditUserModal } from "./UsersManagement/components/modals/EditUserModal";
 
-const ITEMS_PER_PAGE = 10;
-
 export function UserListManagement() {
   const supabase = createClient();
   const {
     profilesList,
+    total,
     loading: usersLoading,
     getAllProfiles,
   } = useUserManagement();
@@ -48,7 +49,6 @@ export function UserListManagement() {
     email: string;
     name: string;
   } | null>(null);
-
   const [conditionsCatalog, setConditionsCatalog] = useState<ConditionItem[]>(
     [],
   );
@@ -62,11 +62,24 @@ export function UserListManagement() {
       });
   }, []);
 
-  const filtered = filterUsersBySearch(profilesList, search);
-  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const currentUsers = filtered.slice(startIndex, endIndex);
+  // Refetch cuando cambia página o búsqueda
+  useEffect(() => {
+    getAllProfiles(currentPage, search);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, search]);
+
+  const refresh = useCallback(
+    () => getAllProfiles(currentPage, search),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentPage, search],
+  );
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1);
+  };
+
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const handleDeleteUser = async () => {
     if (!deleteTarget) return;
@@ -76,7 +89,7 @@ export function UserListManagement() {
       if (!result.success) throw new Error(result.error);
       toast.success(`Usuario "${deleteTarget.name}" eliminado correctamente`);
       setDeleteTarget(null);
-      await getAllProfiles();
+      await refresh();
     } catch (err: unknown) {
       toast.error(
         err instanceof Error ? err.message : "Error al eliminar el usuario",
@@ -88,24 +101,32 @@ export function UserListManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-2xl font-bold text-foreground leading-tight">
           Lista de Usuarios
         </h2>
-        <div className="flex gap-2">
-          <BulkCreateUsers rolesList={rolesList} onFinish={getAllProfiles} />
-          <Button onClick={() => setIsCreateOpen(true)}>
-            <UserPlus className="w-4 h-4 mr-2" />
-            Crear Usuario
+        <div className="flex gap-2 shrink-0">
+          <BulkCreateUsers rolesList={rolesList} onFinish={refresh} />
+          <Button onClick={() => setIsCreateOpen(true)} className="gap-2">
+            <UserPlus className="w-4 h-4" />
+            <span className="hidden sm:inline">Crear Usuario</span>
+            <span className="sm:hidden">Crear</span>
           </Button>
         </div>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Users className="w-5 h-5" />
-            <span>Usuarios Totales</span>
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5" />
+              <span>Usuarios Totales</span>
+            </div>
+            {!usersLoading && (
+              <span className="text-sm font-normal text-muted-foreground">
+                {total} {total === 1 ? "usuario" : "usuarios"}
+              </span>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -113,24 +134,20 @@ export function UserListManagement() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Buscar usuarios por nombre o email..."
+                placeholder="Buscar por nombre o email..."
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10"
               />
             </div>
 
             <UserTable
-              users={currentUsers}
-              filteredCount={filtered.length}
+              users={profilesList}
+              total={total}
               loading={usersLoading}
               currentPage={currentPage}
               totalPages={totalPages}
-              startIndex={startIndex}
-              endIndex={endIndex}
+              pageSize={PAGE_SIZE}
               onPageChange={setCurrentPage}
               onEdit={(id) => {
                 const user = profilesList.find((u) => u.id === id);
@@ -153,13 +170,13 @@ export function UserListManagement() {
       <ChangeEmailDialog
         user={emailChangeUser}
         onClose={() => setEmailChangeUser(null)}
-        onSuccess={getAllProfiles}
+        onSuccess={refresh}
       />
 
       <CreateUserModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
-        onSuccess={getAllProfiles}
+        onSuccess={refresh}
         rolesList={rolesList}
         rolesLoading={rolesLoading}
         conditionsCatalog={conditionsCatalog}
@@ -169,7 +186,7 @@ export function UserListManagement() {
         user={editUser}
         isOpen={!!editUser}
         onClose={() => setEditUser(null)}
-        onSuccess={getAllProfiles}
+        onSuccess={refresh}
         rolesList={rolesList}
         rolesLoading={rolesLoading}
         conditionsCatalog={conditionsCatalog}

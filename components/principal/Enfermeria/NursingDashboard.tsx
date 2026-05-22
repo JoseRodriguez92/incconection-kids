@@ -19,12 +19,29 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  Stethoscope, ClipboardList, Home, Search, Plus, X, Trash2,
-  AlertTriangle, Thermometer, Heart, User, Phone, Shield,
-  Pill, CheckCircle2, Eye, Building, Send, Loader2,
-  ChevronRight, Clock, Bell, RefreshCw,
+  Stethoscope,
+  ClipboardList,
+  Home,
+  Search,
+  Plus,
+  X,
+  Trash2,
+  AlertTriangle,
+  Thermometer,
+  Heart,
+  User,
+  Phone,
+  Shield,
+  Pill,
+  CheckCircle2,
+  Eye,
+  Send,
+  Loader2,
+  ChevronRight,
+  Bell,
+  RefreshCw,
 } from "lucide-react";
-import { createNurseVisit, upsertHealthProfile } from "@/app/actions/nursing";
+import { createNurseVisit } from "@/app/actions/nursing";
 import { InstituteStore } from "@/Stores/InstituteStore";
 
 // ── Local types (replace with Database types once generated) ──────────────────
@@ -52,8 +69,8 @@ interface HealthProfile {
 interface RegularMed {
   id: string;
   medication_name: string;
-  dosage: string;
-  frequency: string;
+  dosage: string | null;
+  frequency: string | null;
   prescribed_by: string | null;
 }
 
@@ -84,16 +101,32 @@ const COMMON_REASONS = [
 ];
 
 const STATUS_OPTIONS = [
-  { value: "atendido",       label: "✅ Atendido — regresa a clases",       color: "text-emerald-600" },
-  { value: "en_observacion", label: "👁️ En observación",                    color: "text-amber-600" },
-  { value: "remitido",       label: "🏥 Remitido a médico / clínica",        color: "text-red-600" },
-  { value: "enviado_a_casa", label: "🏠 Enviado a casa",                     color: "text-violet-600" },
+  {
+    value: "atendido",
+    label: "✅ Atendido — regresa a clases",
+    color: "text-emerald-600",
+  },
+  {
+    value: "en_observacion",
+    label: "👁️ En observación",
+    color: "text-amber-600",
+  },
+  {
+    value: "remitido",
+    label: "🏥 Remitido a médico / clínica",
+    color: "text-red-600",
+  },
+  {
+    value: "enviado_a_casa",
+    label: "🏠 Enviado a casa",
+    color: "text-violet-600",
+  },
 ];
 
 const STATUS_BADGE: Record<string, string> = {
-  atendido:       "bg-emerald-100 text-emerald-700 border-emerald-200",
+  atendido: "bg-emerald-100 text-emerald-700 border-emerald-200",
   en_observacion: "bg-amber-100 text-amber-700 border-amber-200",
-  remitido:       "bg-red-100 text-red-700 border-red-200",
+  remitido: "bg-red-100 text-red-700 border-red-200",
   enviado_a_casa: "bg-violet-100 text-violet-700 border-violet-200",
 };
 
@@ -107,16 +140,28 @@ const EMPTY_FORM = {
   blood_pressure: "",
   heart_rate: "",
   weight_kg: "",
-  status: "atendido" as const,
+  status: "atendido" as
+    | "atendido"
+    | "en_observacion"
+    | "remitido"
+    | "enviado_a_casa",
   notes: "",
   notify_parent: true,
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function NursingDashboard() {
+interface NursingDashboardProps {
+  initialTab?: "hoy" | "nueva" | "historial";
+}
+
+export function NursingDashboard({
+  initialTab = "hoy",
+}: NursingDashboardProps) {
   const institute = InstituteStore((s) => s.institute);
-  const [activeTab, setActiveTab] = useState<"hoy" | "nueva" | "historial">("hoy");
+  const [activeTab, setActiveTab] = useState<"hoy" | "nueva" | "historial">(
+    initialTab,
+  );
   const [activePeriodId, setActivePeriodId] = useState<string>("");
 
   // Hoy
@@ -128,14 +173,20 @@ export function NursingDashboard() {
   const [searchResults, setSearchResults] = useState<StudentResult[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searching, setSearching] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<StudentResult | null>(null);
-  const [healthProfile, setHealthProfile] = useState<HealthProfile | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentResult | null>(
+    null,
+  );
+  const [healthProfile, setHealthProfile] = useState<HealthProfile | null>(
+    null,
+  );
   const [regularMeds, setRegularMeds] = useState<RegularMed[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(false);
 
   // Form
   const [form, setForm] = useState(EMPTY_FORM);
-  const [medications, setMedications] = useState<{ name: string; dosage: string; route: string }[]>([]);
+  const [medications, setMedications] = useState<
+    { name: string; dosage: string; route: string }[]
+  >([]);
   const [saving, setSaving] = useState(false);
 
   // Historial
@@ -167,13 +218,15 @@ export function NursingDashboard() {
 
     const { data } = await supabase
       .from("nurse_visit")
-      .select(`
+      .select(
+        `
         id, visit_date, reason, status, parent_notified, diagnosis,
         student_enrolled (
           user_id,
           profiles:user_id ( full_name, document_number )
         )
-      `)
+      `,
+      )
       .gte("visit_date", `${today}T00:00:00`)
       .lte("visit_date", `${today}T23:59:59`)
       .order("visit_date", { ascending: false });
@@ -212,7 +265,9 @@ export function NursingDashboard() {
       const { data: profiles } = await supabase
         .from("profiles")
         .select("id, full_name, document_number")
-        .or(`full_name.ilike.%${studentSearch}%,document_number.ilike.%${studentSearch}%`)
+        .or(
+          `full_name.ilike.%${studentSearch}%,document_number.ilike.%${studentSearch}%`,
+        )
         .limit(20);
 
       if (!profiles || profiles.length === 0) {
@@ -241,13 +296,16 @@ export function NursingDashboard() {
       // Get group info
       const { data: ghs } = await supabase
         .from("group_has_students")
-        .select(`
+        .select(
+          `
           student_enrolled_id,
           groups!grupo_tiene_estudiante_group_id_fkey ( name, courses ( name ) )
-        `)
+        `,
+        )
         .in("student_enrolled_id", enrolledIds);
 
-      const ghsMap: Record<string, { groupName: string; courseName: string }> = {};
+      const ghsMap: Record<string, { groupName: string; courseName: string }> =
+        {};
       for (const g of ghs ?? []) {
         ghsMap[(g as any).student_enrolled_id] = {
           groupName: (g as any).groups?.name ?? "—",
@@ -345,9 +403,18 @@ export function NursingDashboard() {
       weight_kg: form.weight_kg ? Number(form.weight_kg) : undefined,
       status: form.status,
       notes: form.notes || undefined,
-      medications: medications.filter((m) => m.name.trim()),
+      medications: medications
+        .filter((m) => m.name.trim())
+        .map((m) => ({
+          medication_name: m.name,
+          dosage: m.dosage,
+          route: m.route,
+        })),
       notify_parent: form.notify_parent,
       institute_name: institute?.name ?? "La institución",
+      institute_phone: institute?.phone ?? institute?.mobile_phone,
+      institute_address: institute?.address,
+      institute_city: institute?.city,
     });
 
     setSaving(false);
@@ -384,13 +451,15 @@ export function NursingDashboard() {
 
     const { data } = await supabase
       .from("nurse_visit")
-      .select(`
+      .select(
+        `
         id, visit_date, reason, status, parent_notified, diagnosis,
         student_enrolled (
           user_id,
           profiles:user_id ( full_name, document_number )
         )
-      `)
+      `,
+      )
       .eq("academic_period_id", activePeriodId)
       .order("visit_date", { ascending: false })
       .limit(100);
@@ -422,7 +491,9 @@ export function NursingDashboard() {
     setMedications((p) => [...p, { name: "", dosage: "", route: "oral" }]);
 
   const updateMed = (i: number, key: string, val: string) =>
-    setMedications((p) => p.map((m, idx) => (idx === i ? { ...m, [key]: val } : m)));
+    setMedications((p) =>
+      p.map((m, idx) => (idx === i ? { ...m, [key]: val } : m)),
+    );
 
   const removeMed = (i: number) =>
     setMedications((p) => p.filter((_, idx) => idx !== i));
@@ -433,92 +504,129 @@ export function NursingDashboard() {
       v.student_name.toLowerCase().includes(historialSearch.toLowerCase()) ||
       v.document_number.includes(historialSearch) ||
       v.reason.toLowerCase().includes(historialSearch.toLowerCase());
-    const matchStatus = historialStatus === "all" || v.status === historialStatus;
+    const matchStatus =
+      historialStatus === "all" || v.status === historialStatus;
     return matchSearch && matchStatus;
   });
 
   // ── Today stats ─────────────────────────────────────────────────────────────
   const todayStats = {
-    total:        todayVisits.length,
-    atendido:     todayVisits.filter((v) => v.status === "atendido").length,
-    observacion:  todayVisits.filter((v) => v.status === "en_observacion").length,
-    urgente:      todayVisits.filter((v) => v.status === "remitido" || v.status === "enviado_a_casa").length,
+    total: todayVisits.length,
+    atendido: todayVisits.filter((v) => v.status === "atendido").length,
+    observacion: todayVisits.filter((v) => v.status === "en_observacion")
+      .length,
+    urgente: todayVisits.filter(
+      (v) => v.status === "remitido" || v.status === "enviado_a_casa",
+    ).length,
   };
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-full">
-
+    <div className="flex flex-col h-full relative">
       {/* ── Top bar ── */}
-      <div className="px-6 py-4 border-b bg-background/80 backdrop-blur-sm flex items-center justify-between gap-4">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b bg-background/80 backdrop-blur-sm flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
             <Stethoscope className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h1 className="font-bold text-base leading-tight">Enfermería</h1>
             <p className="text-[11px] text-muted-foreground">
-              {new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long" })}
+              {new Date().toLocaleDateString("es-CO", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              })}
             </p>
           </div>
         </div>
 
         {/* Tab nav */}
-        <nav className="flex items-center gap-1 bg-muted/60 rounded-xl p-1">
+        <nav className="flex items-center gap-1 bg-muted/60 rounded-xl p-1 self-start sm:self-auto">
           {[
-            { id: "hoy",      label: "Hoy",           icon: Home },
-            { id: "nueva",    label: "Nueva atención", icon: Stethoscope },
-            { id: "historial",label: "Historial",      icon: ClipboardList },
+            { id: "hoy", label: "Hoy", icon: Home },
+            { id: "nueva", label: "Atención", icon: Stethoscope },
+            { id: "historial", label: "Historial", icon: ClipboardList },
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id as any)}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+                "flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
                 activeTab === id
                   ? "bg-background shadow-sm text-foreground"
                   : "text-muted-foreground hover:text-foreground",
               )}
             >
-              <Icon className="w-3.5 h-3.5" />
-              {label}
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span>{label}</span>
             </button>
           ))}
         </nav>
       </div>
 
       {/* ── Content ── */}
-      <div className="flex-1 overflow-auto p-6">
-
+      <div className="flex-1 overflow-auto p-4 sm:p-6">
         {/* ════════════════════════════════════════
             HOY
             ════════════════════════════════════════ */}
         {activeTab === "hoy" && (
           <div className="max-w-4xl mx-auto space-y-6">
-
             {/* Stats */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
-                { label: "Atenciones hoy", value: todayStats.total,       icon: Stethoscope, color: "text-primary bg-primary/10" },
-                { label: "Atendidos",       value: todayStats.atendido,    icon: CheckCircle2, color: "text-emerald-600 bg-emerald-50" },
-                { label: "En observación",  value: todayStats.observacion, icon: Eye,          color: "text-amber-600 bg-amber-50" },
-                { label: "Urgentes",        value: todayStats.urgente,     icon: AlertTriangle, color: "text-red-600 bg-red-50" },
+                {
+                  label: "Atenciones hoy",
+                  value: todayStats.total,
+                  icon: Stethoscope,
+                  color: "text-primary bg-primary/10",
+                },
+                {
+                  label: "Atendidos",
+                  value: todayStats.atendido,
+                  icon: CheckCircle2,
+                  color: "text-emerald-600 bg-emerald-50",
+                },
+                {
+                  label: "En observación",
+                  value: todayStats.observacion,
+                  icon: Eye,
+                  color: "text-amber-600 bg-amber-50",
+                },
+                {
+                  label: "Urgentes",
+                  value: todayStats.urgente,
+                  icon: AlertTriangle,
+                  color: "text-red-600 bg-red-50",
+                },
               ].map(({ label, value, icon: Icon, color }) => (
-                <div key={label} className="bg-card border rounded-xl p-4">
-                  <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-3", color)}>
+                <div key={label} className="bg-card/80 backdrop-blur-sm border rounded-xl p-4">
+                  <div
+                    className={cn(
+                      "w-8 h-8 rounded-lg flex items-center justify-center mb-3",
+                      color,
+                    )}
+                  >
                     <Icon className="w-4 h-4" />
                   </div>
                   <p className="text-2xl font-bold">{value}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {label}
+                  </p>
                 </div>
               ))}
             </div>
 
             {/* List */}
-            <div className="bg-card border rounded-xl overflow-hidden">
+            <div className="bg-card/80 backdrop-blur-sm border rounded-xl overflow-hidden">
               <div className="flex items-center justify-between px-5 py-3 border-b bg-muted/30">
                 <p className="text-sm font-semibold">Atenciones del día</p>
-                <Button size="sm" variant="ghost" onClick={loadToday} className="h-7 w-7 p-0">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={loadToday}
+                  className="h-7 w-7 p-0"
+                >
                   <RefreshCw className="w-3.5 h-3.5" />
                 </Button>
               </div>
@@ -543,23 +651,44 @@ export function NursingDashboard() {
               ) : (
                 <div className="divide-y">
                   {todayVisits.map((v) => (
-                    <div key={v.id} className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    <div
+                      key={v.id}
+                      className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors"
+                    >
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <User className="w-4 h-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{v.student_name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{v.reason}</p>
+                        <p className="text-sm font-medium truncate">
+                          {v.student_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {v.reason}
+                        </p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="outline" className={cn("text-[10px] font-medium border", STATUS_BADGE[v.status])}>
-                          {STATUS_OPTIONS.find((s) => s.value === v.status)?.label.split("—")[0].trim()}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] font-medium border",
+                            STATUS_BADGE[v.status],
+                          )}
+                        >
+                          {STATUS_OPTIONS.find((s) => s.value === v.status)
+                            ?.label.split("—")[0]
+                            .trim()}
                         </Badge>
                         {v.parent_notified && (
-                          <Bell className="w-3.5 h-3.5 text-primary" title="Padre notificado" />
+                          <Bell
+                            className="w-3.5 h-3.5 text-primary"
+                            aria-label="Padre notificado"
+                          />
                         )}
                         <span className="text-[10px] text-muted-foreground">
-                          {new Date(v.visit_date).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                          {new Date(v.visit_date).toLocaleTimeString("es-CO", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
                         </span>
                       </div>
                     </div>
@@ -568,10 +697,7 @@ export function NursingDashboard() {
               )}
             </div>
 
-            <Button
-              className="w-full"
-              onClick={() => setActiveTab("nueva")}
-            >
+            <Button className="w-full" onClick={() => setActiveTab("nueva")}>
               <Plus className="w-4 h-4 mr-2" />
               Registrar nueva atención
             </Button>
@@ -583,10 +709,12 @@ export function NursingDashboard() {
             ════════════════════════════════════════ */}
         {activeTab === "nueva" && (
           <div className="max-w-3xl mx-auto space-y-5">
-
             <div>
               <h2 className="text-base font-bold">Nueva atención</h2>
-              <p className="text-xs text-muted-foreground">Busca al estudiante, completa el formulario y guarda la atención.</p>
+              <p className="text-xs text-muted-foreground">
+                Busca al estudiante, completa el formulario y guarda la
+                atención.
+              </p>
             </div>
 
             {/* Student search */}
@@ -601,7 +729,10 @@ export function NursingDashboard() {
                   onChange={(e) => {
                     setStudentSearch(e.target.value);
                     setSearchOpen(true);
-                    if (selectedStudent && e.target.value !== selectedStudent.fullName) {
+                    if (
+                      selectedStudent &&
+                      e.target.value !== selectedStudent.fullName
+                    ) {
                       setSelectedStudent(null);
                       setHealthProfile(null);
                       setRegularMeds([]);
@@ -629,8 +760,13 @@ export function NursingDashboard() {
                           <User className="w-4 h-4 text-primary" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{s.fullName}</p>
-                          <p className="text-xs text-muted-foreground">{s.courseName} · Grupo {s.groupName} · {s.documentNumber}</p>
+                          <p className="text-sm font-medium truncate">
+                            {s.fullName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {s.courseName} · Grupo {s.groupName} ·{" "}
+                            {s.documentNumber}
+                          </p>
                         </div>
                         <ChevronRight className="w-4 h-4 text-muted-foreground" />
                       </button>
@@ -646,8 +782,13 @@ export function NursingDashboard() {
                 <div className="flex items-center justify-between px-4 py-3 bg-primary/10">
                   <div className="flex items-center gap-2">
                     <User className="w-4 h-4 text-primary" />
-                    <span className="text-sm font-semibold">{selectedStudent.fullName}</span>
-                    <span className="text-xs text-muted-foreground">· {selectedStudent.courseName} Gr.{selectedStudent.groupName}</span>
+                    <span className="text-sm font-semibold">
+                      {selectedStudent.fullName}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      · {selectedStudent.courseName} Gr.
+                      {selectedStudent.groupName}
+                    </span>
                   </div>
                   <button
                     onClick={() => {
@@ -664,7 +805,8 @@ export function NursingDashboard() {
 
                 {loadingProfile ? (
                   <div className="flex items-center gap-2 px-4 py-3 text-muted-foreground text-sm">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Cargando perfil de salud...
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Cargando
+                    perfil de salud...
                   </div>
                 ) : (
                   <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
@@ -673,7 +815,9 @@ export function NursingDashboard() {
                       <Heart className="w-3.5 h-3.5 text-red-500 shrink-0" />
                       <div>
                         <p className="text-muted-foreground">Sangre</p>
-                        <p className="font-semibold">{healthProfile?.blood_type ?? "—"}</p>
+                        <p className="font-semibold">
+                          {healthProfile?.blood_type ?? "—"}
+                        </p>
                       </div>
                     </div>
                     {/* EPS */}
@@ -681,17 +825,23 @@ export function NursingDashboard() {
                       <Shield className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                       <div>
                         <p className="text-muted-foreground">EPS</p>
-                        <p className="font-semibold">{healthProfile?.insurance_provider ?? "—"}</p>
+                        <p className="font-semibold">
+                          {healthProfile?.insurance_provider ?? "—"}
+                        </p>
                       </div>
                     </div>
                     {/* Emergency */}
                     <div className="flex items-center gap-2 col-span-2">
                       <Phone className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
                       <div>
-                        <p className="text-muted-foreground">Contacto emergencia</p>
+                        <p className="text-muted-foreground">
+                          Contacto emergencia
+                        </p>
                         <p className="font-semibold">
                           {healthProfile?.emergency_contact_name ?? "—"}
-                          {healthProfile?.emergency_contact_phone ? ` · ${healthProfile.emergency_contact_phone}` : ""}
+                          {healthProfile?.emergency_contact_phone
+                            ? ` · ${healthProfile.emergency_contact_phone}`
+                            : ""}
                         </p>
                       </div>
                     </div>
@@ -701,8 +851,12 @@ export function NursingDashboard() {
                       <div className="col-span-2 sm:col-span-4 flex items-start gap-2 bg-red-50 rounded-lg p-2.5 border border-red-200">
                         <AlertTriangle className="w-3.5 h-3.5 text-red-500 mt-0.5 shrink-0" />
                         <div>
-                          <p className="text-red-700 font-semibold">Alergias:</p>
-                          <p className="text-red-600">{healthProfile!.allergies.join(", ")}</p>
+                          <p className="text-red-700 font-semibold">
+                            Alergias:
+                          </p>
+                          <p className="text-red-600">
+                            {healthProfile!.allergies.join(", ")}
+                          </p>
                         </div>
                       </div>
                     )}
@@ -712,7 +866,9 @@ export function NursingDashboard() {
                       <div className="col-span-2 sm:col-span-4 flex items-start gap-2 bg-amber-50 rounded-lg p-2.5 border border-amber-200">
                         <Pill className="w-3.5 h-3.5 text-amber-600 mt-0.5 shrink-0" />
                         <div>
-                          <p className="text-amber-700 font-semibold">Medicamentos regulares:</p>
+                          <p className="text-amber-700 font-semibold">
+                            Medicamentos regulares:
+                          </p>
                           {regularMeds.map((m) => (
                             <p key={m.id} className="text-amber-600">
                               {m.medication_name} {m.dosage} — {m.frequency}
@@ -725,14 +881,17 @@ export function NursingDashboard() {
                     {/* Chronic conditions */}
                     {healthProfile?.chronic_conditions && (
                       <div className="col-span-2 sm:col-span-4 text-muted-foreground">
-                        <span className="font-medium">Condiciones crónicas: </span>
+                        <span className="font-medium">
+                          Condiciones crónicas:{" "}
+                        </span>
                         {healthProfile.chronic_conditions}
                       </div>
                     )}
 
                     {!healthProfile && (
                       <p className="col-span-2 sm:col-span-4 text-muted-foreground italic">
-                        Sin perfil de salud registrado. Puedes crearlo en "Perfiles de salud".
+                        Sin perfil de salud registrado. Puedes crearlo en
+                        "Perfiles de salud".
                       </p>
                     )}
                   </div>
@@ -750,13 +909,18 @@ export function NursingDashboard() {
                   <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     Motivo de consulta *
                   </Label>
-                  <Select value={form.reason} onValueChange={(v) => setF("reason", v)}>
+                  <Select
+                    value={form.reason}
+                    onValueChange={(v) => setF("reason", v)}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecciona el motivo" />
                     </SelectTrigger>
                     <SelectContent>
                       {COMMON_REASONS.map((r) => (
-                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -791,13 +955,31 @@ export function NursingDashboard() {
                   </Label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                     {[
-                      { key: "temperature",   label: "Temperatura (°C)", placeholder: "37.0" },
-                      { key: "blood_pressure",label: "Presión arterial",  placeholder: "120/80" },
-                      { key: "heart_rate",    label: "Frec. cardíaca",    placeholder: "80" },
-                      { key: "weight_kg",     label: "Peso (kg)",         placeholder: "45.0" },
+                      {
+                        key: "temperature",
+                        label: "Temperatura (°C)",
+                        placeholder: "37.0",
+                      },
+                      {
+                        key: "blood_pressure",
+                        label: "Presión arterial",
+                        placeholder: "120/80",
+                      },
+                      {
+                        key: "heart_rate",
+                        label: "Frec. cardíaca",
+                        placeholder: "80",
+                      },
+                      {
+                        key: "weight_kg",
+                        label: "Peso (kg)",
+                        placeholder: "45.0",
+                      },
                     ].map(({ key, label, placeholder }) => (
                       <div key={key} className="space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">{label}</Label>
+                        <Label className="text-[10px] text-muted-foreground">
+                          {label}
+                        </Label>
                         <Input
                           value={(form as any)[key]}
                           onChange={(e) => setF(key as any, e.target.value)}
@@ -843,38 +1025,62 @@ export function NursingDashboard() {
                     <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground flex items-center gap-1.5">
                       <Pill className="w-3.5 h-3.5" /> Medicamentos aplicados
                     </Label>
-                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={addMedication}>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs"
+                      onClick={addMedication}
+                    >
                       <Plus className="w-3 h-3 mr-1" /> Agregar
                     </Button>
                   </div>
                   {medications.map((m, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <Input
-                        value={m.name}
-                        onChange={(e) => updateMed(i, "name", e.target.value)}
-                        placeholder="Medicamento"
-                        className="flex-1 h-8 text-sm"
-                      />
-                      <Input
-                        value={m.dosage}
-                        onChange={(e) => updateMed(i, "dosage", e.target.value)}
-                        placeholder="Dosis"
-                        className="w-24 h-8 text-sm"
-                      />
-                      <Select value={m.route} onValueChange={(v) => updateMed(i, "route", v)}>
-                        <SelectTrigger className="w-28 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="oral">Oral</SelectItem>
-                          <SelectItem value="topico">Tópico</SelectItem>
-                          <SelectItem value="inhalado">Inhalado</SelectItem>
-                          <SelectItem value="inyectable">Inyectable</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive" onClick={() => removeMed(i)}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                    <div
+                      key={i}
+                      className="flex flex-col gap-1.5 p-3 rounded-lg border bg-muted/30"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={m.name}
+                          onChange={(e) => updateMed(i, "name", e.target.value)}
+                          placeholder="Nombre del medicamento"
+                          className="flex-1 h-8 text-sm"
+                        />
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                          onClick={() => removeMed(i)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          value={m.dosage}
+                          onChange={(e) =>
+                            updateMed(i, "dosage", e.target.value)
+                          }
+                          placeholder="Dosis (ej: 500mg)"
+                          className="flex-1 h-8 text-sm"
+                        />
+                        <Select
+                          value={m.route}
+                          onValueChange={(v) => updateMed(i, "route", v)}
+                        >
+                          <SelectTrigger className="w-32 h-8 text-xs shrink-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="oral">Oral</SelectItem>
+                            <SelectItem value="topico">Tópico</SelectItem>
+                            <SelectItem value="inhalado">Inhalado</SelectItem>
+                            <SelectItem value="inyectable">
+                              Inyectable
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -917,12 +1123,14 @@ export function NursingDashboard() {
                 </div>
 
                 {/* Notify parent toggle */}
-                <div className={cn(
-                  "flex items-start gap-3 p-4 rounded-xl border-2 transition-all",
-                  form.notify_parent
-                    ? "border-primary/30 bg-primary/5"
-                    : "border-border/60 bg-muted/20",
-                )}>
+                <div
+                  className={cn(
+                    "flex items-start gap-3 p-4 rounded-xl border-2 transition-all",
+                    form.notify_parent
+                      ? "border-primary/30 bg-primary/5"
+                      : "border-border/60 bg-muted/20",
+                  )}
+                >
                   <Checkbox
                     id="notify"
                     checked={form.notify_parent}
@@ -930,13 +1138,18 @@ export function NursingDashboard() {
                     className="mt-0.5"
                   />
                   <div>
-                    <label htmlFor="notify" className="text-sm font-semibold cursor-pointer flex items-center gap-1.5">
+                    <label
+                      htmlFor="notify"
+                      className="text-sm font-semibold cursor-pointer flex items-center gap-1.5"
+                    >
                       <Send className="w-3.5 h-3.5 text-primary" />
                       Notificar al padre / madre de familia ahora
                     </label>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Se enviará un correo inmediatamente con el resumen de la atención.
-                      {(form.status === "remitido" || form.status === "enviado_a_casa") &&
+                      Se enviará un correo inmediatamente con el resumen de la
+                      atención.
+                      {(form.status === "remitido" ||
+                        form.status === "enviado_a_casa") &&
                         " ⚠️ Se marcará como alerta urgente."}
                     </p>
                   </div>
@@ -964,9 +1177,15 @@ export function NursingDashboard() {
                     onClick={handleSave}
                   >
                     {saving ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Guardando...</>
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />{" "}
+                        Guardando...
+                      </>
                     ) : (
-                      <><CheckCircle2 className="w-4 h-4 mr-2" /> Guardar atención</>
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" /> Guardar
+                        atención
+                      </>
                     )}
                   </Button>
                 </div>
@@ -990,23 +1209,35 @@ export function NursingDashboard() {
                   className="pl-9"
                 />
               </div>
-              <Select value={historialStatus} onValueChange={setHistorialStatus}>
+              <Select
+                value={historialStatus}
+                onValueChange={setHistorialStatus}
+              >
                 <SelectTrigger className="w-44">
                   <SelectValue placeholder="Estado" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
                   {STATUS_OPTIONS.map((s) => (
-                    <SelectItem key={s.value} value={s.value}>{s.label.split("—")[0].trim()}</SelectItem>
+                    <SelectItem key={s.value} value={s.value}>
+                      {s.label.split("—")[0].trim()}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button size="sm" variant="outline" className="h-9 w-9 p-0" onClick={loadHistorial}>
-                <RefreshCw className={cn("w-4 h-4", loadingHistorial && "animate-spin")} />
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-9 w-9 p-0"
+                onClick={loadHistorial}
+              >
+                <RefreshCw
+                  className={cn("w-4 h-4", loadingHistorial && "animate-spin")}
+                />
               </Button>
             </div>
 
-            <div className="bg-card border rounded-xl overflow-hidden">
+            <div className="bg-card/80 backdrop-blur-sm border rounded-xl overflow-hidden">
               {loadingHistorial ? (
                 <div className="flex items-center justify-center py-12 gap-2 text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -1020,30 +1251,57 @@ export function NursingDashboard() {
               ) : (
                 <div className="divide-y">
                   {filteredHistorial.map((v) => (
-                    <div key={v.id} className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors">
+                    <div
+                      key={v.id}
+                      className="flex items-center gap-4 px-5 py-3 hover:bg-muted/30 transition-colors"
+                    >
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                         <User className="w-4 h-4 text-primary" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{v.student_name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{v.reason}</p>
+                        <p className="text-sm font-medium truncate">
+                          {v.student_name}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {v.reason}
+                        </p>
                         {v.diagnosis && (
-                          <p className="text-xs text-muted-foreground/70 truncate">{v.diagnosis}</p>
+                          <p className="text-xs text-muted-foreground/70 truncate">
+                            {v.diagnosis}
+                          </p>
                         )}
                       </div>
                       <div className="flex flex-col items-end gap-1 shrink-0">
-                        <Badge variant="outline" className={cn("text-[10px] font-medium border", STATUS_BADGE[v.status])}>
-                          {STATUS_OPTIONS.find((s) => s.value === v.status)?.label.split("—")[0].trim()}
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] font-medium border",
+                            STATUS_BADGE[v.status],
+                          )}
+                        >
+                          {STATUS_OPTIONS.find((s) => s.value === v.status)
+                            ?.label.split("—")[0]
+                            .trim()}
                         </Badge>
                         <div className="flex items-center gap-1.5">
-                          {v.parent_notified && <Bell className="w-3 h-3 text-primary" />}
+                          {v.parent_notified && (
+                            <Bell className="w-3 h-3 text-primary" />
+                          )}
                           <span className="text-[10px] text-muted-foreground">
-                            {new Date(v.visit_date).toLocaleDateString("es-CO", {
-                              day: "2-digit", month: "short",
-                            })}{" "}
-                            {new Date(v.visit_date).toLocaleTimeString("es-CO", {
-                              hour: "2-digit", minute: "2-digit",
-                            })}
+                            {new Date(v.visit_date).toLocaleDateString(
+                              "es-CO",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                              },
+                            )}{" "}
+                            {new Date(v.visit_date).toLocaleTimeString(
+                              "es-CO",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
                           </span>
                         </div>
                       </div>
@@ -1054,7 +1312,6 @@ export function NursingDashboard() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

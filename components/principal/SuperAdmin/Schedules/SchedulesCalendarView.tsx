@@ -29,22 +29,26 @@ export function SchedulesCalendarView({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Calendar className="w-5 h-5" />
+        <CardTitle className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 shrink-0" />
           <span>Horario Semanal</span>
-          <Badge variant="secondary" className="ml-2">Vista de Calendario</Badge>
+          <Badge variant="secondary" className="text-xs">Calendario</Badge>
         </CardTitle>
       </CardHeader>
       <CardContent>
         {!dataLoaded ? (
           <div className="text-center py-12 text-muted-foreground">
             <Filter className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p className="text-lg font-medium mb-2">Presiona el botón "Filtrar" para cargar los horarios</p>
-            <p className="text-sm">Configura los filtros que necesites y luego haz clic en el botón Filtrar</p>
+            <p className="text-base font-medium mb-1">Presiona "Filtrar" para cargar los horarios</p>
+            <p className="text-sm">Configura los filtros y haz clic en Filtrar</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <div className="grid grid-cols-6 gap-2 min-w-[900px]">
+          <>
+            <p className="text-xs text-muted-foreground mb-3 text-center sm:hidden select-none">
+              ← Desliza para ver el calendario completo →
+            </p>
+            <div className="overflow-x-auto -mx-2 px-2">
+              <div className="grid grid-cols-6 gap-2 min-w-[800px]">
               {/* Columna de horas */}
               <div className="col-span-1">
                 <div className="h-12 flex items-center justify-center font-semibold text-sm bg-muted rounded">
@@ -122,7 +126,8 @@ export function SchedulesCalendarView({
                 </div>
               ))}
             </div>
-          </div>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>

@@ -129,21 +129,21 @@ export function ClassroomsManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Gestión de Aulas</h2>
-        <div className="flex space-x-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-2xl font-bold text-foreground leading-tight">Gestión de Aulas</h2>
+        <div className="flex gap-2 sm:shrink-0">
           <Dialog>
             <DialogTrigger asChild>
               <Button
                 variant="outline"
                 size="sm"
-                className="flex items-center space-x-2 bg-transparent"
+                className="flex items-center gap-2 bg-transparent flex-1 sm:flex-none"
               >
-                <Upload className="w-4 h-4" />
-                <span>Subir CSV</span>
+                <Upload className="w-4 h-4 shrink-0" />
+                <span>CSV</span>
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Subir Aulas Masivamente</DialogTitle>
               </DialogHeader>
@@ -155,17 +155,17 @@ export function ClassroomsManagement() {
           </Dialog>
           <Dialog open={isCreateAulaOpen} onOpenChange={setIsCreateAulaOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="flex items-center space-x-2">
-                <Plus className="w-4 h-4" />
+              <Button size="sm" className="flex items-center gap-2 flex-1 sm:flex-none">
+                <Plus className="w-4 h-4 shrink-0" />
                 <span>Nueva Aula</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
+            <DialogContent className="w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader className="pb-4">
                 <DialogTitle className="text-xl">Crear Nueva Aula</DialogTitle>
               </DialogHeader>
               <div className="space-y-6 pt-2">
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre del Aula</Label>
                     <Input
@@ -219,7 +219,7 @@ export function ClassroomsManagement() {
                       }
                     />
                   </div>
-                  <div className="col-span-2 space-y-2">
+                  <div className="sm:col-span-2 space-y-2">
                     <Label htmlFor="room-type">Tipo de Aula</Label>
                     <Input
                       id="room-type"
@@ -230,7 +230,7 @@ export function ClassroomsManagement() {
                       }
                     />
                   </div>
-                  <div className="col-span-2 space-y-2">
+                  <div className="sm:col-span-2 space-y-2">
                     <Label htmlFor="equipment">Equipamiento (separado por comas)</Label>
                     <Input
                       id="equipment"
@@ -248,7 +248,7 @@ export function ClassroomsManagement() {
                     />
                   </div>
                 </div>
-                <div className="flex justify-end space-x-3 pt-4">
+                <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-2">
                   <Button
                     variant="outline"
                     onClick={() => setIsCreateAulaOpen(false)}
@@ -365,13 +365,13 @@ export function ClassroomsManagement() {
       </Card>
 
       <Dialog open={isEditAulaOpen} onOpenChange={setIsEditAulaOpen}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="w-[calc(100%-2rem)] sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader className="pb-4">
             <DialogTitle className="text-xl">Editar Aula</DialogTitle>
           </DialogHeader>
           {selectedAula && (
             <div className="space-y-6 pt-2">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Nombre del Aula</Label>
                   <Input
@@ -434,7 +434,7 @@ export function ClassroomsManagement() {
                     }
                   />
                 </div>
-                <div className="col-span-2 space-y-2">
+                <div className="sm:col-span-2 space-y-2">
                   <Label htmlFor="edit-room-type">Tipo de Aula</Label>
                   <Input
                     id="edit-room-type"
@@ -448,7 +448,7 @@ export function ClassroomsManagement() {
                     }
                   />
                 </div>
-                <div className="col-span-2 space-y-2">
+                <div className="sm:col-span-2 space-y-2">
                   <Label htmlFor="edit-equipment">Equipamiento (separado por comas)</Label>
                   <Input
                     id="edit-equipment"
@@ -466,7 +466,7 @@ export function ClassroomsManagement() {
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-3 pt-4">
+              <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-2">
                 <Button
                   variant="outline"
                   onClick={() => setIsEditAulaOpen(false)}

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -10,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Filter, Search } from "lucide-react";
+import { ChevronDown, Filter, Search } from "lucide-react";
 import { DIAS_SEMANA } from "./constants";
 
 type PeriodoOption = { id: string; name: string; is_active: boolean | null };
@@ -55,17 +56,37 @@ export function SchedulesFilters({
   isLoading,
   handleFilterClick,
 }: Props) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 1024px)").matches) {
+      setIsOpen(true);
+    }
+  }, []);
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Filter className="w-5 h-5" />
-          <span>Filtros</span>
+      {/* Header — en mobile actúa como toggle */}
+      <CardHeader
+        className="cursor-pointer select-none"
+        onClick={() => setIsOpen((v) => !v)}
+      >
+        <CardTitle className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Filter className="w-5 h-5 shrink-0" />
+            <span>Filtros</span>
+          </div>
+          <ChevronDown
+            className={`w-4 h-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
+          />
         </CardTitle>
       </CardHeader>
-      <CardContent>
+
+      {/* Contenido — oculto en mobile hasta abrir, siempre visible en desktop */}
+      <CardContent className={isOpen ? "block" : "hidden"}>
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-4">
+          <div className="grid grid-cols-1 gap-3">
+            {/* Búsqueda */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
@@ -77,8 +98,8 @@ export function SchedulesFilters({
             </div>
 
             <Select value={selectedProfesor} onValueChange={setSelectedProfesor}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por profesor" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Profesor" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos los profesores">Todos los profesores</SelectItem>
@@ -89,8 +110,8 @@ export function SchedulesFilters({
             </Select>
 
             <Select value={selectedMateria} onValueChange={setSelectedMateria}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por materia" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Materia" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todas las materias">Todas las materias</SelectItem>
@@ -101,8 +122,8 @@ export function SchedulesFilters({
             </Select>
 
             <Select value={selectedCurso} onValueChange={setSelectedCurso}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por curso" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Curso" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos los cursos">Todos los cursos</SelectItem>
@@ -113,8 +134,8 @@ export function SchedulesFilters({
             </Select>
 
             <Select value={selectedGrupo} onValueChange={setSelectedGrupo}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por grupo" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Grupo" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos los grupos">Todos los grupos</SelectItem>
@@ -125,8 +146,8 @@ export function SchedulesFilters({
             </Select>
 
             <Select value={selectedPeriodo} onValueChange={setSelectedPeriodo}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por periodo" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Período" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos los periodos">Todos los periodos</SelectItem>
@@ -139,8 +160,8 @@ export function SchedulesFilters({
             </Select>
 
             <Select value={selectedDia} onValueChange={setSelectedDia}>
-              <SelectTrigger>
-                <SelectValue placeholder="Filtrar por día" />
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Día" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos los días">Todos los días</SelectItem>
@@ -151,18 +172,14 @@ export function SchedulesFilters({
             </Select>
           </div>
 
-          <div className="flex justify-end">
-            <Button onClick={handleFilterClick} disabled={isLoading} className="px-6">
-              {isLoading ? (
-                <span>Cargando...</span>
-              ) : (
-                <>
-                  <Filter className="w-4 h-4 mr-2" />
-                  Filtrar
-                </>
-              )}
-            </Button>
-          </div>
+          <Button
+            onClick={handleFilterClick}
+            disabled={isLoading}
+            className="w-full gap-2"
+          >
+            <Filter className="w-4 h-4" />
+            {isLoading ? "Cargando..." : "Filtrar"}
+          </Button>
         </div>
       </CardContent>
     </Card>

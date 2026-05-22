@@ -14,13 +14,13 @@ import {
   Calendar,
   Users,
   Bell,
-  User,
   Clock,
   DoorOpen,
   TicketCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
+import { InstituteStore } from "@/Stores/InstituteStore";
 
 const profesorMenu: MenuCategory[] = [
   {
@@ -146,6 +146,7 @@ export default function ProfesorLayout({
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const instituteLogo = InstituteStore((s) => (s.institute as any)?.logo_url ?? "/logos/jqc_logo.png");
 
   const activeView =
     profesorMenu
@@ -176,7 +177,7 @@ export default function ProfesorLayout({
         menuCategories={profesorMenu}
       />
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-transparent">
-        <header className="p-4 border-b border-border/40 bg-background/60 backdrop-blur-sm lg:hidden">
+        <header className="px-4 py-2 border-b border-border/40 bg-background/60 backdrop-blur-sm lg:hidden flex items-center justify-between">
           <Button
             variant="ghost"
             size="sm"
@@ -184,6 +185,11 @@ export default function ProfesorLayout({
           >
             <Menu className="w-5 h-5" />
           </Button>
+          <img
+            src={instituteLogo}
+            alt="Logo del colegio"
+            className="h-11 w-auto object-contain"
+          />
         </header>
         <main className="flex-1 overflow-auto w-full bg-transparent">
           {children}

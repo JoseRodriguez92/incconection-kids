@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart2, BookOpen, Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { BarChart2, BookOpen, Loader2, Users, GraduationCap, AlertCircle } from "lucide-react";
 import { StudentGradesDialog } from "@/components/principal/Profesor/StudentGradesDialog";
 import { GroupCard } from "@/app/usuario/profesor/director-grupo/components/GroupCard";
 import { useResultadosData } from "./Resultados/hooks/useResultadosData";
@@ -11,6 +10,7 @@ import { ResultadosFilters } from "./Resultados/ResultadosFilters";
 import { UserInfoStore } from "@/Stores/UserInfoStore";
 import type { GroupWithStudents, StudentInGroup } from "./Resultados/types";
 import type { GradeEditParams } from "./Resultados/hooks/useGradeEditor";
+import { cn } from "@/lib/utils";
 
 export function ResultadosManagement() {
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -40,25 +40,27 @@ export function ResultadosManagement() {
 
   const handleCourseChange = (id: string | null) => {
     setSelectedCourseId(id);
-    setOpenGroups(new Set()); // colapsar grupos al cambiar curso
+    setOpenGroups(new Set());
   };
 
   const totalStudents = groups.reduce((acc, g) => acc + g.students.length, 0);
+  const selectedCourse = courses.find((c) => c.id === selectedCourseId);
 
   return (
-    <div className="min-w-0 w-full bg-transparent">
-      {/* Header */}
-      <div className="bg-linear-to-r from-primary/10 via-primary/5 to-transparent border-b px-6 py-6 relative z-1">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+    <div className="min-w-0 w-full bg-transparent flex flex-col h-full">
+
+      {/* ── Header ── */}
+      <div className="bg-white/70 backdrop-blur-sm border-b px-4 py-3 sm:px-6 sm:py-4 relative z-10">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-primary/15 rounded-xl">
-              <BarChart2 className="h-6 w-6 text-primary" />
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+              <BarChart2 className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              <h1 className="text-xl font-bold tracking-tight text-foreground leading-tight">
                 Resultados Académicos
               </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-xs text-muted-foreground mt-0.5">
                 Consulta el rendimiento de todos los grupos por curso
               </p>
             </div>
@@ -73,65 +75,106 @@ export function ResultadosManagement() {
             totalStudents={totalStudents}
           />
         </div>
+
+        {/* Stat chips — solo cuando hay curso seleccionado con datos */}
+        {selectedCourseId && !loading && groups.length > 0 && (
+          <div className="hidden sm:flex items-center gap-3 mt-3 pt-3 border-t">
+            <p className="text-xs font-medium text-muted-foreground">
+              {selectedCourse?.name}
+            </p>
+            <div className="h-3.5 w-px bg-border" />
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span><strong className="text-foreground">{groups.length}</strong> {groups.length === 1 ? "grupo" : "grupos"}</span>
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Users className="w-3.5 h-3.5" />
+              <span><strong className="text-foreground">{totalStudents}</strong> {totalStudents === 1 ? "estudiante" : "estudiantes"}</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Contenido */}
-      <div className="p-6 space-y-5 relative z-1">
-        {/* Estado: sin curso seleccionado */}
+      {/* ── Contenido ── */}
+      <div className="flex-1 p-4 sm:p-6 relative z-10">
+
+        {/* Empty state — sin curso seleccionado */}
         {!selectedCourseId && !loading && (
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center space-y-4">
-              <div className="p-5 bg-muted/40 rounded-full inline-flex">
-                <BookOpen className="h-12 w-12 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center min-h-[420px] gap-8">
+            {/* Mensaje principal */}
+            <div className="text-center space-y-2">
+              <div className="w-16 h-16 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="h-8 w-8 text-primary/60" />
               </div>
-              <div className="space-y-1.5">
-                <h3 className="text-xl font-semibold">Selecciona un curso</h3>
-                <p className="text-muted-foreground max-w-sm mx-auto text-sm">
-                  Elige un curso en el filtro superior para ver los resultados
-                  académicos de sus grupos.
-                </p>
+              <h3 className="text-lg font-semibold text-foreground">Selecciona un curso</h3>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto leading-relaxed">
+                Elige uno de los cursos disponibles para ver los resultados académicos de sus grupos.
+              </p>
+            </div>
+
+            {/* Cursos como cards clickeables */}
+            {courses.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-3 max-w-2xl">
+                {courses.map((course) => (
+                  <button
+                    key={course.id}
+                    onClick={() => handleCourseChange(course.id)}
+                    className={cn(
+                      "group flex items-center gap-2.5 px-4 py-2.5 rounded-xl border-2 bg-white/80",
+                      "text-sm font-medium transition-all duration-200",
+                      "border-border/60 text-muted-foreground",
+                      "hover:border-primary/40 hover:text-primary hover:bg-primary/5 hover:shadow-sm",
+                    )}
+                  >
+                    <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center shrink-0 group-hover:bg-primary/15 transition-colors">
+                      <GraduationCap className="w-3.5 h-3.5 text-primary/70" />
+                    </div>
+                    {course.name}
+                  </button>
+                ))}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Loading */}
+        {loading && (
+          <div className="flex flex-col items-center justify-center py-24 gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary/60" />
+            <p className="text-sm text-muted-foreground">Cargando resultados...</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="flex items-center justify-center min-h-[300px]">
+            <div className="flex flex-col items-center gap-3 text-center">
+              <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center">
+                <AlertCircle className="h-6 w-6 text-red-500" />
+              </div>
+              <p className="text-sm text-red-600 font-medium">{error}</p>
             </div>
           </div>
         )}
 
-        {/* Estado: cargando */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
-            <p className="text-muted-foreground text-sm">Cargando resultados...</p>
-          </div>
-        )}
-
-        {/* Estado: error */}
-        {!loading && error && (
-          <Card className="border-red-200 bg-red-50">
-            <CardContent className="pt-6 text-center text-red-700 text-sm">
-              {error}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Estado: sin grupos en el curso */}
+        {/* Sin grupos */}
         {!loading && !error && selectedCourseId && groups.length === 0 && (
-          <div className="flex items-center justify-center min-h-[300px]">
+          <div className="flex items-center justify-center min-h-[320px]">
             <div className="text-center space-y-3">
-              <div className="p-5 bg-muted/40 rounded-full inline-flex">
-                <BarChart2 className="h-10 w-10 text-muted-foreground" />
+              <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto">
+                <BarChart2 className="h-7 w-7 text-muted-foreground/50" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-semibold">Sin grupos</h3>
-                <p className="text-muted-foreground text-sm">
-                  Este curso no tiene grupos en el período académico activo.
-                </p>
-              </div>
+              <h3 className="text-base font-semibold text-foreground">Sin grupos registrados</h3>
+              <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                Este curso no tiene grupos en el período académico activo.
+              </p>
             </div>
           </div>
         )}
 
         {/* Grupos con tablas de notas */}
         {!loading && !error && groups.length > 0 && (
-          <div className="space-y-5">
+          <div className="space-y-4">
             {groups.map((group, groupIdx) => (
               <GroupCard
                 key={group.id}
@@ -139,9 +182,7 @@ export function ResultadosManagement() {
                 groupIdx={groupIdx}
                 isOpen={openGroups.has(group.id)}
                 onToggle={() => toggleGroup(group.id)}
-                onViewGrades={(student, grp) =>
-                  setGradesTarget({ student, group: grp })
-                }
+                onViewGrades={(student, grp) => setGradesTarget({ student, group: grp })}
                 onGradeEdit={handleGradeEdit}
               />
             ))}
